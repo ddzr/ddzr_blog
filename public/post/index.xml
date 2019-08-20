@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Posts on DDZR Blog</title>
+    <link>/post/</link>
+    <description>Recent content in Posts on DDZR Blog</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Mon, 19 Aug 2019 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="/post/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Learning data.table</title>
+      <link>/post/learning-data-table/</link>
+      <pubDate>Mon, 19 Aug 2019 00:00:00 +0000</pubDate>
+      
+      <guid>/post/learning-data-table/</guid>
+      <description>IntroThis would be lists of things related to data.table that I found useful. I realized there’re certain tasks I want to do in data.table that I keep forgetting and have to google it. After multiple times of repetition, I’m just getting tired of it and decide to document some tips/tricks I found useful.
+These tricks could be dangerous workaround as I’m newbie to R/data.table. Sometimes I only know this would work but don’t know why it would work.</description>
+    </item>
+    
+    <item>
+      <title>Basic HTML Elements</title>
+      <link>/post/basic-elements/</link>
+      <pubDate>Mon, 16 Apr 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/post/basic-elements/</guid>
+      <description>&lt;p&gt;The main purpose of this article is to make sure that all basic HTML Elements are decorated with CSS so as to not miss any possible elements when creating new themes for Hugo.&lt;/p&gt;</description>
+    </item>
+    
+  </channel>
+</rss>

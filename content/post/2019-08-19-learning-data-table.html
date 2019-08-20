@@ -1,0 +1,114 @@
+---
+title: Learning data.table
+author: Xiaoke Liu
+date: '2019-08-19'
+slug: learning-data-table
+categories:
+  - data.table
+  - R
+tags:
+  - R Markdown
+description: ''
+thumbnail: ''
+---
+
+
+
+<div id="intro" class="section level1">
+<h1>Intro</h1>
+<p>This would be lists of things related to <code>data.table</code> that I found useful. I realized there’re certain tasks I want to do in data.table that I keep forgetting and have to google it. After multiple times of repetition, I’m just getting tired of it and decide to document some tips/tricks I found useful.<br />
+These tricks could be dangerous workaround as I’m newbie to R/data.table. Sometimes I only know this would work but don’t know why it would work. Sometimes I don’t even know if the code would always work or not. Hopefully, I’ll learn more and more about R/data.table and keep updating this.
+This is inspired by Andrew Books’ blog <a href="http://brooksandrew.github.io/simpleblog/articles/advanced-data-table/">Advanced tips and tricks with data.table</a>, if you haven’t seen this blog, check it out. It would be way more comprehensive than mine’s here.</p>
+<p>Multiple dataset might be used here, but let’s start with <code>mtcars</code></p>
+</div>
+<div id="programming-with-data.table-in-function" class="section level1">
+<h1>Programming with data.table in function</h1>
+<p>I’m in the middle of confusion about <code>get</code>,<code>..</code>,and <code>substitue</code>, comimg from SAS background, I’m sort of intimidated by these macro like language.<br />
+Anyway, below is some workarond in data.table</p>
+<div id="working-with-i" class="section level2">
+<h2>Working with <code>i</code></h2>
+<p>When working with <code>i</code>, we can use <code>get</code> to substitute column names in string</p>
+<pre class="r"><code>filter_then_cnt&lt;-function(dt,filter_col,filter_value){
+  dt_copy&lt;-copy(dt)
+  dt_copy[get(filter_col)==filter_value,.N]
+}
+filter_then_cnt(mtcars_dt,&#39;vs&#39;,1)</code></pre>
+<pre><code>## [1] 14</code></pre>
+</div>
+<div id="working-with-j" class="section level2 tabset">
+<h2>Working with <code>j</code></h2>
+<p>When working with <code>j</code>, we can still use <code>get</code> or <code>mget</code> for multiple cols. We can also use <code>..</code> as <code>data.table 1.10.2</code> introduced <code>..</code> prefix, some information can be found in this <a href="https://stackoverflow.com/questions/45380628/why-does-work-to-pass-column-names-in-a-character-vector-variable">SO question</a>.</p>
+<div id="use-..-prefix" class="section level3">
+<h3>Use <code>..</code> prefix</h3>
+<pre class="r"><code>xl_head&lt;-function(dt,col_name){
+  dt_copy&lt;-copy(dt)
+  dt_copy[1:3,..col_name]
+}
+xl_head(mtcars_dt,c(&#39;vs&#39;)) </code></pre>
+<pre><code>##    vs
+## 1:  0
+## 2:  0
+## 3:  1</code></pre>
+<pre class="r"><code>xl_head(mtcars_dt,c(&#39;gear&#39;,&#39;vs&#39;)) </code></pre>
+<pre><code>##    gear vs
+## 1:    4  0
+## 2:    4  0
+## 3:    4  1</code></pre>
+</div>
+<div id="use-mget-function" class="section level3">
+<h3>Use <code>mget</code> function</h3>
+<pre class="r"><code>xl_head2&lt;-function(dt,col_name){
+  dt_copy&lt;-copy(dt)
+  dt_copy[1:3,mget(col_name)]
+}
+
+xl_head2(mtcars_dt,c(&#39;vs&#39;)) </code></pre>
+<pre><code>##    vs
+## 1:  0
+## 2:  0
+## 3:  1</code></pre>
+<pre class="r"><code>xl_head2(mtcars_dt,c(&#39;gear&#39;,&#39;vs&#39;)) </code></pre>
+<pre><code>##    gear vs
+## 1:    4  0
+## 2:    4  0
+## 3:    4  1</code></pre>
+</div>
+</div>
+<div id="working-with-by" class="section level2">
+<h2>Working with <code>by=</code></h2>
+<p>Luckily, we can use string as input directly in <code>by</code></p>
+<pre class="r"><code>group_by_cnt&lt;-function(dt,col_name){
+  dt_copy&lt;-copy(dt)
+  dt_copy[,.(cnt=.N,mean=mean(get(col_name))), by= c(col_name)]
+}
+group_by_cnt(mtcars_dt,&#39;vs&#39;)</code></pre>
+<pre><code>##    vs cnt mean
+## 1:  0  18    0
+## 2:  1  14    1</code></pre>
+<p>I found sometimes <code>..</code> would work sometimes don’t. <code>get</code> seems to work most of time, but sometimes the output colname is werid and needs to pay attention.</p>
+</div>
+</div>
+<div id="piping-in-data.table" class="section level1 tabset">
+<h1>Piping in <code>data.table</code></h1>
+<p>I really like piping, by searching online, I found this great <a href="https://www.gl-li.com/2017/07/25/compare-data.table-pipes-and-magrittr-pipes/">post</a> that talks about pipes in <code>data.table</code>
+Maybe I’m just getting used to tidyverse, I prefer <code>magrittr</code> pipeing over data.table its own <code>dt[][]</code>. Maybe <code>%&gt;%</code> is really able to sperate things out.
+Let’s say we want to filter mtcars that <code>mpg</code> &gt;=15 and then dedup the dataset by <code>vs</code> and <code>carb</code>, then show only head 3, which require to use <code>unique</code> function and <code>head</code>.</p>
+<div id="with-piping" class="section level2">
+<h2>With piping</h2>
+<pre class="r"><code>mtcars_dt[mpg&gt;=15,] %&gt;% 
+unique(by=c(&#39;vs&#39;,&#39;carb&#39;)) %&gt;% .[,head(.SD,3)]</code></pre>
+<pre><code>##     mpg cyl disp  hp drat   wt  qsec vs am gear carb
+## 1: 21.0   6  160 110 3.90 2.62 16.46  0  1    4    4
+## 2: 22.8   4  108  93 3.85 2.32 18.61  1  1    4    1
+## 3: 18.7   8  360 175 3.15 3.44 17.02  0  0    3    2</code></pre>
+</div>
+<div id="without-piping" class="section level2">
+<h2>Without piping</h2>
+<p>This would look like below.</p>
+<pre class="r"><code>unique(mtcars_dt[mpg&gt;=15,],by=c(&#39;vs&#39;,&#39;carb&#39;))[,head(.SD,3)]</code></pre>
+<pre><code>##     mpg cyl disp  hp drat   wt  qsec vs am gear carb
+## 1: 21.0   6  160 110 3.90 2.62 16.46  0  1    4    4
+## 2: 22.8   4  108  93 3.85 2.32 18.61  1  1    4    1
+## 3: 18.7   8  360 175 3.15 3.44 17.02  0  0    3    2</code></pre>
+</div>
+</div>

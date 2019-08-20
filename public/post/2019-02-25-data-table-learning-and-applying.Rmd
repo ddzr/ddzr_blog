@@ -1,0 +1,101 @@
+---
+title: 'data.table Learning and Applying '
+author: Xiaoke Liu
+date: '2019-02-25'
+slug: data-table-learning-and-applying
+categories: data.table
+tags:
+  - data.table
+output:
+  blogdown::html_page
+---
+
+# Intro  
+This would be lists of things related to `data.table` that I found useful. I realized there’re certain tasks I want to do in data.table that I keep forgetting and have to google it. After multiple times of repetition, I’m just getting tired of it and decide to document some tips/tricks I found useful.  
+These tricks could be dangerous workaround as I'm newbie to R/data.table. Sometimes I only know this would work but don't know why it would work. Sometimes I don't even know if the code would always work or not. Hopefully, I'll learn more and more about R/data.table and keep updating this. 
+This is inspired by Andrew Books’ blog [Advanced tips and tricks with data.table]( http://brooksandrew.github.io/simpleblog/articles/advanced-data-table/), if you haven't seen this blog, check it out. It would be way more comprehensive than mine's here.
+
+Multiple dataset might be used here, but let's start with `mtcars`
+```{r}
+library(data.table)
+library(magrittr)
+library(knitr)
+mtcars_dt<-as.data.table(mtcars)
+```
+
+# Programming with data.table in function  
+I'm in the middle of confusion about `get`,`..`,and `substitue`, comimg from SAS background, I'm sort of intimidated by these macro like language.  
+Anyway, below is some workarond in data.table  
+
+## Working with `i` 
+When working with `i`, we can use `get` to substitute column names in string
+```{r}
+filter_then_cnt<-function(dt,filter_col,filter_value){
+  dt_copy<-copy(dt)
+  dt_copy[get(filter_col)==filter_value,.N]
+}
+filter_then_cnt(mtcars_dt,'vs',1)
+```
+## Working with `j` {.tabset}
+When working with `j`, we can still use `get` or `mget` for multiple cols. We can also use `..` as `data.table 1.10.2` introduced `..` prefix, some information can be found in this [SO question](https://stackoverflow.com/questions/45380628/why-does-work-to-pass-column-names-in-a-character-vector-variable). 
+
+### Use `..` prefix
+```{r}
+xl_head<-function(dt,col_name){
+  dt_copy<-copy(dt)
+  dt_copy[1:3,..col_name]
+}
+xl_head(mtcars_dt,c('vs')) 
+xl_head(mtcars_dt,c('gear','vs')) 
+```
+### Use `mget` function
+```{r}
+xl_head2<-function(dt,col_name){
+  dt_copy<-copy(dt)
+  dt_copy[1:3,mget(col_name)]
+}
+
+xl_head2(mtcars_dt,c('vs')) 
+xl_head2(mtcars_dt,c('gear','vs')) 
+
+```
+
+## Working with `by=`  
+Luckily, we can use string as input directly in `by` 
+```{r}
+group_by_cnt<-function(dt,col_name){
+  dt_copy<-copy(dt)
+  dt_copy[,.(cnt=.N,mean=mean(get(col_name))), by= c(col_name)]
+}
+group_by_cnt(mtcars_dt,'vs')
+```
+
+I found sometimes `..` would work sometimes don't. `get` seems to work most of time, but sometimes the output colname is werid and needs to pay attention. 
+
+# Piping in `data.table` {.tabset}  
+I really like piping, by searching online, I found this great [post](https://www.gl-li.com/2017/07/25/compare-data.table-pipes-and-magrittr-pipes/) that talks about pipes in `data.table` 
+Maybe I'm just getting used to tidyverse, I prefer `magrittr` pipeing over data.table its own `dt[][]`. Maybe `%>%` is really able to sperate things out. 
+Let's say we want to filter mtcars that `mpg` >=15 and then dedup the dataset by `vs` and `carb`, then show only head 3, which require to use `unique` function and `head`. 
+
+
+## With piping
+```{r}
+mtcars_dt[mpg>=15,] %>% 
+unique(by=c('vs','carb')) %>% .[,head(.SD,3)]
+``` 
+
+## Without piping 
+This would look like below. It's not that bad... 
+```{r}
+unique(mtcars_dt[mpg>=15,],by=c('vs','carb'))[,head(.SD,3)]
+```
+
+# Reshape the data  
+I have to admit, I always have to search it online whenever I need to transpose the data. This [cheat sheet](https://www.petrovski.dk/2018/10/02/a-visual-datatable-cheat-sheet/) created by `Erik Petrovski` would come very handy.   
+Thus I'll just paste his nicely illustration about reshaping in data.table below to remind me how `dcast` and `melt` works
+![](/post/2019-02-25-data-table-learning-and-applying_files/Snip20190228_3.png) 
+# Applying same function to multiple Columns  
+
+
+
+
