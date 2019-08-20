@@ -6,10 +6,21 @@
     <description>Recent content on DDZR Blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Mon, 19 Aug 2019 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Tue, 20 Aug 2019 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Moving Files Around In R</title>
+      <link>/post/moving-files-around-in-r/</link>
+      <pubDate>Tue, 20 Aug 2019 00:00:00 +0000</pubDate>
+      
+      <guid>/post/moving-files-around-in-r/</guid>
+      <description>IntroRecently, I have a project requires some automation. By googling and reading answers on StackOverFlow, I learned quite a lot, I think it’s better to document these little tricks here. The automation can be decomposed into below operations:
+Creating 24 folders with similar naming patterns
+Copy same code into 24 foldersChange each code’s contents slightly, like input dataset name, output dataset file location, etc.Run same UNIX command on different directoryCovert each code’s output files from xls to xlsxCreating 24 folders with similar naming patternsI found this blog post really helpful, it includes common tips related to manipulate files in r.</description>
+    </item>
     
     <item>
       <title>About Me</title>

@@ -1,0 +1,83 @@
+---
+title: Moving Files Around In R
+author: Xiaoke Liu
+date: '2019-08-20'
+slug: moving-files-around-in-r
+categories:
+  - R
+  - Automation
+tags:
+  - R
+  - Unix
+  - Automation
+description: ''
+thumbnail: ''
+
+---
+
+
+
+<div id="intro" class="section level1">
+<h1>Intro</h1>
+<p>Recently, I have a project requires some automation. By googling and reading answers on StackOverFlow, I learned quite a lot, I think it’s better to document these little tricks here. The automation can be decomposed into below operations:</p>
+<ol style="list-style-type: decimal">
+<li>Creating 24 folders with similar naming patterns<br />
+</li>
+<li>Copy same code into 24 folders</li>
+<li>Change each code’s contents slightly, like input dataset name, output dataset file location, etc.</li>
+<li>Run same UNIX command on different directory</li>
+<li>Covert each code’s output files from xls to xlsx</li>
+</ol>
+</div>
+<div id="creating-24-folders-with-similar-naming-patterns" class="section level1">
+<h1>Creating 24 folders with similar naming patterns</h1>
+<p>I found this <a href="http://theautomatic.net/2018/07/11/manipulate-files-r/">blog post</a> really helpful, it includes common tips related to manipulate files in r.
+Creating folders, we can use <code>file.create</code> function to accomplish</p>
+<blockquote>
+<pre class="r"><code>file_name&lt;-c(1:24)
+file_location&lt;-paste0(getwd(),&#39;new&#39;,file_name)
+file.create(file_location)</code></pre>
+</div>
+<div id="change-code-content-and-move-to-desired-location" class="section level1">
+<h1>Change Code content and move to desired location</h1>
+<p>The code I want to run is in <code>.sas</code> format. As I would like to change some code content like input dataset name, file location, etc, I would need to save the sas code as <code>.txt</code>, then use <code>readLines</code> to read in the txt file.</p>
+<p>In the txt file, I set up some keywords to help me to use <code>gsub</code> later on in order to modify the code slightly.</p>
+<p>For example, I changed <code>%let loc=/mnt/path/particular_file_loc;</code> to <code>%let loc=/mnt/path/DATA_LOCATION;</code>.<br />
+In this way, I can use <code>gsub</code> to locate <code>DATA_LOCATION</code> and switch that to actual file directory.
+Below is code</p>
+<blockquote>
+<pre class="r"><code>x &lt;- readLines(sas_code_txt_format)
+x[1]&lt;-gsub(&#39;DATA_LOCATION&#39;,DATA_LOCATION, x[1])
+x[7]&lt;-gsub(&#39;Output_SASData_Name&#39;,Output_SASData_Name, x[7])
+x[11]&lt;-gsub(&#39;Output_SASCode_Name&#39;,Output_SASCode_Name, x[11])
+#save txt to desired file location with desired code name 
+write.table(x,file =Output_SAS_Code_Loc,row.names=F,col.names=F,quote = F)</code></pre>
+</div>
+<div id="run-same-unix-command-on-different-directory" class="section level1">
+<h1>Run same UNIX command on different directory</h1>
+<p>Typically, I need t go to each sub-folders, and run same UNIX command <code>nohup sas code.sas &amp;</code>.
+Given we have 24 folders, I’d like to do it at once. By some research, I found this <a href="https://stackoverflow.com/questions/7470165/how-to-go-to-each-directory-and-execute-a-command">stackoverflow post</a>.</p>
+<p>To make ourselves life easier, make sure you name your folders in some simple patterns, such as, I can make the folder always begin as <code>DDZR_Folder</code>, then I can use following UNIX code to run each code within each folder.</p>
+<blockquote>
+<p>for d in ./DDZR_Folder*/<br />
+do<br />
+( cd “$d” &amp;&amp; nohup sas sas_code.sas &amp; )<br />
+done</p>
+</blockquote>
+<p>Another helpful tips is run same command on different sas code within same directory</p>
+<blockquote>
+<p>for filename in ./*.sas; do nohup sas $filename; done</p>
+</blockquote>
+<p>One thing worth-noting is, it’s better to do some experiment under a test folder before running UNIX command on the actual folder.</p>
+</div>
+<div id="convert-xls-to-xlsx" class="section level1">
+<h1>Convert xls to xlsx</h1>
+<p>We had some files are stored in xls, this <a href="https://indranilgayen.wordpress.com/2016/05/11/batch-convert-xls-to-xlsx-using-r/">post</a> provides a way to convert all the xls to xlsx</p>
+<blockquote>
+<p>purrr::walk(all_24_folders_in_a_vector,convert_xls_to_xlsx)</p>
+</blockquote>
+</div>
+<div id="takeaway" class="section level1">
+<h1>Takeaway</h1>
+<p>This short blog post summarized how I automated a tedious task. It seems to know some UNIX command and regular expression would be really helpful.</p>
+</div>

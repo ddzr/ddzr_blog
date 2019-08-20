@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html class="no-js" lang="en-us">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>Moving Files Around In R - DDZR Blog</title>
+	<script>(function(d,e){d[e]=d[e].replace("no-js","js");})(document.documentElement,"className");</script>
+	<meta name="description" content="">
+	<meta property="og:title" content="Moving Files Around In R" />
+<meta property="og:description" content="IntroRecently, I have a project requires some automation. By googling and reading answers on StackOverFlow, I learned quite a lot, I think it’s better to document these little tricks here. The automation can be decomposed into below operations:
+Creating 24 folders with similar naming patterns
+Copy same code into 24 foldersChange each code’s contents slightly, like input dataset name, output dataset file location, etc.Run same UNIX command on different directoryCovert each code’s output files from xls to xlsxCreating 24 folders with similar naming patternsI found this blog post really helpful, it includes common tips related to manipulate files in r." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="/post/moving-files-around-in-r/" />
+<meta property="article:published_time" content="2019-08-20T00:00:00+00:00" />
+<meta property="article:modified_time" content="2019-08-20T00:00:00+00:00" />
+
+	
+	<link rel="dns-prefetch" href="//fonts.googleapis.com">
+	<link rel="dns-prefetch" href="//fonts.gstatic.com">
+	<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:400,400i,700">
+	<link rel="stylesheet" href="/css/style.css">
+	
+	<link rel="shortcut icon" href="/favicon.ico">
+		
+</head>
+<body class="body">
+	<div class="container container--outer">
+		<header class="header">
+	<div class="container">
+		<div class="logo">
+			<a class="logo__link" href="/" title="DDZR Blog" rel="home">
+				<div class="logo__title">DDZR Blog</div>
+				<div class="logo__tagline">DDZR Blog</div>
+			</a>
+		</div>
+		
+<nav class="menu">
+	<button class="menu__btn" aria-haspopup="true" aria-expanded="false" tabindex="0">
+		<span class="menu__btn-title" tabindex="-1">Menu</span>
+	</button>
+	<ul class="menu__list">
+		<li class="menu__item">
+			<a class="menu__link" href="/about/">About Me</a>
+		</li>
+	</ul>
+</nav>
+
+	</div>
+</header>
+
+<link href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
+		<div class="wrapper flex">
+			<div class="primary">
+			
+<main class="main" role="main">
+	<article class="post">
+		<header class="post__header">
+			<h1 class="post__title">Moving Files Around In R</h1>
+			<div class="post__meta meta">
+<div class="meta__item-datetime meta__item">
+	<svg class="meta__icon icon icon-time" width="16" height="14" viewBox="0 0 30 28"><path d="M15 0C7 0 1 6 1 14s6 14 14 14 14-6 14-14S23 0 15 0zm0 25C9 25 4 20 4 14S9 3 15 3s11 5 11 11-5 11-11 11zm1-18h-2v8.4l6.8 4.4L22 18l-6-3.8V7z"/></svg>
+	<time class="meta__text" datetime="2019-08-20T00:00:00">August 20, 2019</time>
+</div>
+
+<div class="meta__item-categories meta__item">
+	<svg class="meta__icon icon icon-category" width="16" height="16" viewBox="0 0 16 16"><path d="m7 2l1 2h8v11h-16v-13z"/></svg>
+	<span class="meta__text"><a class="meta__link" href="/categories/r" rel="category">R</a>, <a class="meta__link" href="/categories/automation" rel="category">Automation</a></span>
+</div>
+</div>
+		</header><div class="content post__content clearfix">
+			
+
+
+<div id="intro" class="section level1">
+<h1>Intro</h1>
+<p>Recently, I have a project requires some automation. By googling and reading answers on StackOverFlow, I learned quite a lot, I think it’s better to document these little tricks here. The automation can be decomposed into below operations:</p>
+<ol style="list-style-type: decimal">
+<li>Creating 24 folders with similar naming patterns<br />
+</li>
+<li>Copy same code into 24 folders</li>
+<li>Change each code’s contents slightly, like input dataset name, output dataset file location, etc.</li>
+<li>Run same UNIX command on different directory</li>
+<li>Covert each code’s output files from xls to xlsx</li>
+</ol>
+</div>
+<div id="creating-24-folders-with-similar-naming-patterns" class="section level1">
+<h1>Creating 24 folders with similar naming patterns</h1>
+<p>I found this <a href="http://theautomatic.net/2018/07/11/manipulate-files-r/">blog post</a> really helpful, it includes common tips related to manipulate files in r.
+Creating folders, we can use <code>file.create</code> function to accomplish</p>
+<blockquote>
+<pre class="r"><code>file_name&lt;-c(1:24)
+file_location&lt;-paste0(getwd(),&#39;new&#39;,file_name)
+file.create(file_location)</code></pre>
+</div>
+<div id="change-code-content-and-move-to-desired-location" class="section level1">
+<h1>Change Code content and move to desired location</h1>
+<p>The code I want to run is in <code>.sas</code> format. As I would like to change some code content like input dataset name, file location, etc, I would need to save the sas code as <code>.txt</code>, then use <code>readLines</code> to read in the txt file.</p>
+<p>In the txt file, I set up some keywords to help me to use <code>gsub</code> later on in order to modify the code slightly.</p>
+<p>For example, I changed <code>%let loc=/mnt/path/particular_file_loc;</code> to <code>%let loc=/mnt/path/DATA_LOCATION;</code>.<br />
+In this way, I can use <code>gsub</code> to locate <code>DATA_LOCATION</code> and switch that to actual file directory.
+Below is code</p>
+<blockquote>
+<pre class="r"><code>x &lt;- readLines(sas_code_txt_format)
+x[1]&lt;-gsub(&#39;DATA_LOCATION&#39;,DATA_LOCATION, x[1])
+x[7]&lt;-gsub(&#39;Output_SASData_Name&#39;,Output_SASData_Name, x[7])
+x[11]&lt;-gsub(&#39;Output_SASCode_Name&#39;,Output_SASCode_Name, x[11])
+#save txt to desired file location with desired code name 
+write.table(x,file =Output_SAS_Code_Loc,row.names=F,col.names=F,quote = F)</code></pre>
+</div>
+<div id="run-same-unix-command-on-different-directory" class="section level1">
+<h1>Run same UNIX command on different directory</h1>
+<p>Typically, I need t go to each sub-folders, and run same UNIX command <code>nohup sas code.sas &amp;</code>.
+Given we have 24 folders, I’d like to do it at once. By some research, I found this <a href="https://stackoverflow.com/questions/7470165/how-to-go-to-each-directory-and-execute-a-command">stackoverflow post</a>.</p>
+<p>To make ourselves life easier, make sure you name your folders in some simple patterns, such as, I can make the folder always begin as <code>DDZR_Folder</code>, then I can use following UNIX code to run each code within each folder.</p>
+<blockquote>
+<p>for d in ./DDZR_Folder*/<br />
+do<br />
+( cd “$d” &amp;&amp; nohup sas sas_code.sas &amp; )<br />
+done</p>
+</blockquote>
+<p>Another helpful tips is run same command on different sas code within same directory</p>
+<blockquote>
+<p>for filename in ./*.sas; do nohup sas $filename; done</p>
+</blockquote>
+<p>One thing worth-noting is, it’s better to do some experiment under a test folder before running UNIX command on the actual folder.</p>
+</div>
+<div id="convert-xls-to-xlsx" class="section level1">
+<h1>Convert xls to xlsx</h1>
+<p>We had some files are stored in xls, this <a href="https://indranilgayen.wordpress.com/2016/05/11/batch-convert-xls-to-xlsx-using-r/">post</a> provides a way to convert all the xls to xlsx</p>
+<blockquote>
+<p>purrr::walk(all_24_folders_in_a_vector,convert_xls_to_xlsx)</p>
+</blockquote>
+</div>
+<div id="takeaway" class="section level1">
+<h1>Takeaway</h1>
+<p>This short blog post summarized how I automated a tedious task. It seems to know some UNIX command and regular expression would be really helpful.</p>
+</div>
+
+		</div>
+		<footer class="post__footer">
+			
+<div class="post__tags tags clearfix">
+	<svg class="tags__badge icon icon-tag" width="16" height="16" viewBox="0 0 32 32"><path d="M32 19c0 1-1 2-1 2L21 31s-1 1-2 1-2-1-2-1L2 16c-1-1-1.4-2-1.4-2S0 12.5 0 11V3C0 1.5.8.8.8.8S1.5 0 3 0h8c1.5 0 3 .6 3 .6S15 1 16 2l15 15s1 1 1 2zM7 10a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/></svg>
+	<ul class="tags__list">
+		<li class="tags__item"><a class="tags__link btn" href="/tags/r/" rel="tag">R</a></li>
+		<li class="tags__item"><a class="tags__link btn" href="/tags/unix/" rel="tag">Unix</a></li>
+		<li class="tags__item"><a class="tags__link btn" href="/tags/automation/" rel="tag">Automation</a></li>
+	</ul>
+</div>
+		</footer>
+	</article>
+</main>
+
+<div class="authorbox clearfix">
+	<figure class="authorbox__avatar">
+		<img alt="Xiaoke Liu avatar" src="/img/Jiuzhai_Front_photo.jpg" class="avatar" height="90" width="90">
+	</figure>
+	<div class="authorbox__header">
+		<span class="authorbox__name">About Xiaoke Liu</span>
+	</div>
+	<div class="authorbox__description">
+		:)
+	</div>
+</div>
+
+<nav class="post-nav flex">
+	<div class="post-nav__item post-nav__item--prev">
+		<a class="post-nav__link" href="/post/learning-data-table/" rel="prev"><span class="post-nav__caption">«&thinsp;Previous</span><p class="post-nav__post-title">Learning data.table</p></a>
+	</div>
+</nav>
+
+
+			</div>
+			<aside class="sidebar"><div class="widget-search widget">
+	<form class="widget-search__form" role="search" method="get" action="https://google.com/search">
+		<label>
+			<input class="widget-search__field" type="search" placeholder="SEARCH..." value="" name="q" aria-label="SEARCH...">
+		</label>
+		<input class="widget-search__submit" type="submit" value="Search">
+		<input type="hidden" name="sitesearch" value="/" />
+	</form>
+</div>
+<div class="widget-recent widget">
+	<h4 class="widget__title">Recent Posts</h4>
+	<div class="widget__content">
+		<ul class="widget__list">
+			<li class="widget__item"><a class="widget__link" href="/post/moving-files-around-in-r/">Moving Files Around In R</a></li>
+			<li class="widget__item"><a class="widget__link" href="/post/learning-data-table/">Learning data.table</a></li>
+			<li class="widget__item"><a class="widget__link" href="/post/basic-elements/">Basic HTML Elements</a></li>
+		</ul>
+	</div>
+</div>
+<div class="widget-categories widget">
+	<h4 class="widget__title">Categories</h4>
+	<div class="widget__content">
+		<ul class="widget__list">
+			<li class="widget__item"><a class="widget__link" href="/categories/automation">Automation</a></li>
+			<li class="widget__item"><a class="widget__link" href="/categories/data.table">Data.table</a></li>
+			<li class="widget__item"><a class="widget__link" href="/categories/development">Development</a></li>
+			<li class="widget__item"><a class="widget__link" href="/categories/r">R</a></li>
+		</ul>
+	</div>
+</div>
+<div class="widget-taglist widget">
+	<h4 class="widget__title">Tags</h4>
+	<div class="widget__content">
+		<a class="widget-taglist__link widget__link btn" href="/tags/automation" title="Automation">Automation</a>
+		<a class="widget-taglist__link widget__link btn" href="/tags/basic-elements" title="Basic elements">Basic elements</a>
+		<a class="widget-taglist__link widget__link btn" href="/tags/css" title="Css">Css</a>
+		<a class="widget-taglist__link widget__link btn" href="/tags/data.table" title="Data.table">Data.table</a>
+		<a class="widget-taglist__link widget__link btn" href="/tags/html" title="Html">Html</a>
+		<a class="widget-taglist__link widget__link btn" href="/tags/r" title="R">R</a>
+		<a class="widget-taglist__link widget__link btn" href="/tags/unix" title="Unix">Unix</a>
+	</div>
+</div>
+</aside>
+		</div>
+		<footer class="footer">
+	<div class="container footer__container flex">
+		
+		<div class="footer__copyright">
+			&copy; 2019 DDZR Blog.
+			<span class="footer__copyright-credits">Generated with <a href="https://gohugo.io/" rel="nofollow noopener" target="_blank">Hugo</a> and <a href="https://github.com/Vimux/Mainroad/" rel="nofollow noopener" target="_blank">Mainroad</a> theme.</span>
+		</div>
+	</div>
+</footer>
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/r.min.js"></script>
+
+<script>
+hljs.configure({languages: []});
+hljs.initHighlightingOnLoad();
+</script>
+	</div>
+<script async defer src="/js/menu.js"></script>
+</body>
+</html>

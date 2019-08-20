@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>R on DDZR Blog</title>
-    <link>/categories/r/</link>
-    <description>Recent content in R on DDZR Blog</description>
+    <title>Unix on DDZR Blog</title>
+    <link>/tags/unix/</link>
+    <description>Recent content in Unix on DDZR Blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <lastBuildDate>Tue, 20 Aug 2019 00:00:00 +0000</lastBuildDate>
     
-	<atom:link href="/categories/r/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="/tags/unix/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
@@ -20,16 +20,6 @@
       <description>IntroRecently, I have a project requires some automation. By googling and reading answers on StackOverFlow, I learned quite a lot, I think it’s better to document these little tricks here. The automation can be decomposed into below operations:
 Creating 24 folders with similar naming patterns
 Copy same code into 24 foldersChange each code’s contents slightly, like input dataset name, output dataset file location, etc.Run same UNIX command on different directoryCovert each code’s output files from xls to xlsxCreating 24 folders with similar naming patternsI found this blog post really helpful, it includes common tips related to manipulate files in r.</description>
-    </item>
-    
-    <item>
-      <title>Learning data.table</title>
-      <link>/post/learning-data-table/</link>
-      <pubDate>Mon, 19 Aug 2019 00:00:00 +0000</pubDate>
-      
-      <guid>/post/learning-data-table/</guid>
-      <description>IntroThis would be lists of things related to data.table that I found useful. I realized there’re certain tasks I want to do in data.table that I keep forgetting and have to google it. After multiple times of repetition, I’m just getting tired of it and decide to document some tips/tricks I found useful.
-These tricks could be dangerous workaround as I’m newbie to R/data.table. Sometimes I only know this would work but don’t know why it would work.</description>
     </item>
     
   </channel>

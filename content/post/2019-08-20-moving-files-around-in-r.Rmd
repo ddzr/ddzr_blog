@@ -1,0 +1,88 @@
+---
+title: Moving Files Around In R
+author: Xiaoke Liu
+date: '2019-08-20'
+slug: moving-files-around-in-r
+categories:
+  - R
+  - Automation
+tags:
+  - R
+  - Unix
+  - Automation
+description: ''
+thumbnail: ''
+
+---
+
+# Intro  
+
+Recently, I have a project requires some automation. By googling and reading answers on StackOverFlow, I learned quite a lot, I think it's better to document these little tricks here. The automation can be decomposed into below operations:
+
+1. Creating 24 folders with similar naming patterns  
+2. Copy same code into 24 folders
+3. Change each code's contents slightly, like input dataset name, output dataset file location, etc. 
+4. Run same UNIX command on different directory 
+5. Covert each code's output files from xls to xlsx 
+
+# Creating 24 folders with similar naming patterns 
+
+I found this [blog post](http://theautomatic.net/2018/07/11/manipulate-files-r/) really helpful, it includes common tips related to manipulate files in r. 
+Creating folders, we can use `file.create` function to accomplish 
+
+<blockquote>
+```{r, eval=FALSE}
+file_name<-c(1:24)
+file_location<-paste0(getwd(),'new',file_name)
+file.create(file_location)
+```
+# Change Code content and move to desired location
+The code I want to run is in `.sas` format. As I would like to change some code content like input dataset name, file location, etc, I would need to save the sas code as `.txt`, then use `readLines` to read in the txt file.  
+
+In the txt file, I set up some keywords to help me to use `gsub` later on in order to modify the code slightly.  
+
+For example, I changed `%let loc=/mnt/path/particular_file_loc;` to `%let loc=/mnt/path/DATA_LOCATION;`.   
+In this way, I can use `gsub` to locate `DATA_LOCATION` and switch that to actual file directory.
+Below is code
+
+<blockquote>
+```{r, eval=FALSE}
+x <- readLines(sas_code_txt_format)
+x[1]<-gsub('DATA_LOCATION',DATA_LOCATION, x[1])
+x[7]<-gsub('Output_SASData_Name',Output_SASData_Name, x[7])
+x[11]<-gsub('Output_SASCode_Name',Output_SASCode_Name, x[11])
+#save txt to desired file location with desired code name 
+write.table(x,file =Output_SAS_Code_Loc,row.names=F,col.names=F,quote = F)
+```
+# Run same UNIX command on different directory
+
+Typically, I need t go to each sub-folders, and run same UNIX command `nohup sas code.sas &`. 
+Given we have 24 folders, I'd like to do it at once. By some research, I found this [stackoverflow post](https://stackoverflow.com/questions/7470165/how-to-go-to-each-directory-and-execute-a-command). 
+
+To make ourselves life easier, make sure you name your folders in some simple patterns, such as, I can make the folder always begin as `DDZR_Folder`, then I can use following UNIX code to run each code within each folder. 
+
+>for d in ./DDZR_Folder*/  
+>do  
+>    ( cd "$d" && nohup sas sas_code.sas &  )  
+>done  
+
+Another helpful tips is run same command on different sas code within same directory  
+
+> for filename in ./*.sas; do nohup sas $filename; done
+
+One thing worth-noting is, it's better to do some experiment under a test folder before running UNIX command on the actual folder. 
+
+# Convert xls to xlsx
+
+We had some files are stored in xls, this [post](https://indranilgayen.wordpress.com/2016/05/11/batch-convert-xls-to-xlsx-using-r/) provides a way to convert all the xls to xlsx
+
+>purrr::walk(all_24_folders_in_a_vector,convert_xls_to_xlsx) 
+
+
+# Takeaway
+
+This short blog post summarized how I automated a tedious task. It seems to know some UNIX command and regular expression would be really helpful. 
+
+
+
+
