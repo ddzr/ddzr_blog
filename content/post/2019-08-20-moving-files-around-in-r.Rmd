@@ -13,6 +13,9 @@ tags:
 description: ''
 thumbnail: ''
 
+output:
+  blogdown::html_page:
+    toc: true
 ---
 
 # Intro  

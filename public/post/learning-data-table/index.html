@@ -8,8 +8,7 @@
 	<script>(function(d,e){d[e]=d[e].replace("no-js","js");})(document.documentElement,"className");</script>
 	<meta name="description" content="">
 	<meta property="og:title" content="Learning data.table" />
-<meta property="og:description" content="IntroThis would be lists of things related to data.table that I found useful. I realized there’re certain tasks I want to do in data.table that I keep forgetting and have to google it. After multiple times of repetition, I’m just getting tired of it and decide to document some tips/tricks I found useful.
-These tricks could be dangerous workaround as I’m newbie to R/data.table. Sometimes I only know this would work but don’t know why it would work." />
+<meta property="og:description" content="IntroProgramming with data.table in functionWorking with iWorking with jUse .. prefixUse mget functionWorking with by=Piping in data.tableWith pipingWithout pipingIntroThis would be lists of things related to data.table that I found useful. I realized there’re certain tasks I want to do in data.table that I keep forgetting and have to google it. After multiple times of repetition, I’m just getting tired of it and decide to document some tips/tricks I found useful." />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="/post/learning-data-table/" />
 <meta property="article:published_time" content="2019-08-19T00:00:00+00:00" />
@@ -71,6 +70,23 @@ These tricks could be dangerous workaround as I’m newbie to R/data.table. Some
 		</header><div class="content post__content clearfix">
 			
 
+<div id="TOC">
+<ul>
+<li><a href="#intro">Intro</a></li>
+<li><a href="#programming-with-data.table-in-function">Programming with data.table in function</a><ul>
+<li><a href="#working-with-i">Working with <code>i</code></a></li>
+<li><a href="#working-with-j">Working with <code>j</code></a><ul>
+<li><a href="#use-..-prefix">Use <code>..</code> prefix</a></li>
+<li><a href="#use-mget-function">Use <code>mget</code> function</a></li>
+</ul></li>
+<li><a href="#working-with-by">Working with <code>by=</code></a></li>
+</ul></li>
+<li><a href="#piping-in-data.table">Piping in <code>data.table</code></a><ul>
+<li><a href="#with-piping">With piping</a></li>
+<li><a href="#without-piping">Without piping</a></li>
+</ul></li>
+</ul>
+</div>
 
 <div id="intro" class="section level1">
 <h1>Intro</h1>

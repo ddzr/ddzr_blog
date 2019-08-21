@@ -8,9 +8,7 @@
 	<script>(function(d,e){d[e]=d[e].replace("no-js","js");})(document.documentElement,"className");</script>
 	<meta name="description" content="">
 	<meta property="og:title" content="Moving Files Around In R" />
-<meta property="og:description" content="IntroRecently, I have a project requires some automation. By googling and reading answers on StackOverFlow, I learned quite a lot, I think it’s better to document these little tricks here. The automation can be decomposed into below operations:
-Creating 24 folders with similar naming patterns
-Copy same code into 24 foldersChange each code’s contents slightly, like input dataset name, output dataset file location, etc.Run same UNIX command on different directoryCovert each code’s output files from xls to xlsxCreating 24 folders with similar naming patternsI found this blog post really helpful, it includes common tips related to manipulate files in r." />
+<meta property="og:description" content="IntroCreating 24 folders with similar naming patternsChange Code content and move to desired locationRun same UNIX command on different directoryConvert xls to xlsxTakeawayIntroRecently, I have a project requires some automation. By googling and reading answers on StackOverFlow, I learned quite a lot, I think it’s better to document these little tricks here. The automation can be decomposed into below operations:" />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="/post/moving-files-around-in-r/" />
 <meta property="article:published_time" content="2019-08-20T00:00:00+00:00" />
@@ -72,6 +70,16 @@ Creating 24 folders with similar naming patterns
 		</header><div class="content post__content clearfix">
 			
 
+<div id="TOC">
+<ul>
+<li><a href="#intro">Intro</a></li>
+<li><a href="#creating-24-folders-with-similar-naming-patterns">Creating 24 folders with similar naming patterns</a></li>
+<li><a href="#change-code-content-and-move-to-desired-location">Change Code content and move to desired location</a></li>
+<li><a href="#run-same-unix-command-on-different-directory">Run same UNIX command on different directory</a></li>
+<li><a href="#convert-xls-to-xlsx">Convert xls to xlsx</a></li>
+<li><a href="#takeaway">Takeaway</a></li>
+</ul>
+</div>
 
 <div id="intro" class="section level1">
 <h1>Intro</h1>

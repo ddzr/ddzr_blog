@@ -12,7 +12,7 @@ description: ''
 thumbnail: ''
 
 output:
-  html_document:
+  blogdown::html_page:
     toc: true
 
 ---
