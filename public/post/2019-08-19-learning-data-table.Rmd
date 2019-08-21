@@ -86,14 +86,14 @@ Let's say we want to filter mtcars that `mpg` >=15 and then dedup the dataset by
 
 
 ## With piping
-```{r}
+```{r eval=F}
 mtcars_dt[mpg>=15,] %>% 
 unique(by=c('vs','carb')) %>% .[,head(.SD,3)]
 ``` 
 
 ## Without piping 
 This would look like below.
-```{r}
+```{r eval=F}
 unique(mtcars_dt[mpg>=15,],by=c('vs','carb'))[,head(.SD,3)]
 ```
 

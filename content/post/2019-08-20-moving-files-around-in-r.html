@@ -68,9 +68,9 @@ write.table(x,file =Output_SAS_Code_Loc,row.names=F,col.names=F,quote = F)</code
 </div>
 <div id="run-same-unix-command-on-different-directory" class="section level1">
 <h1>Run same UNIX command on different directory</h1>
-<p>Typically, I need t go to each sub-folders, and run same UNIX command <code>nohup sas code.sas &amp;</code>.
-Given we have 24 folders, I’d like to do it at once. By some research, I found this <a href="https://stackoverflow.com/questions/7470165/how-to-go-to-each-directory-and-execute-a-command">stackoverflow post</a>.</p>
-<p>To make ourselves life easier, make sure you name your folders in some simple patterns, such as, I can make the folder always begin as <code>DDZR_Folder</code>, then I can use following UNIX code to run each code within each folder.</p>
+<p>For this particular task, I need to go to each sub-folders, and run same UNIX command <code>nohup sas code.sas &amp;</code> within each sub-folder.
+Given we have 24 folders, I’d like to do it at once rather than type 24 <code>cd sub-folder</code> command in putty. By some research, I found this <a href="https://stackoverflow.com/questions/7470165/how-to-go-to-each-directory-and-execute-a-command">stackoverflow post</a>.</p>
+<p>To make ourselves life easier, make sure naming your folders in patterns, such as, I can make the folder always begin as <code>DDZR_Folder</code>, then I can use following UNIX code to run each code within each folder.</p>
 <blockquote>
 <p>for d in ./DDZR_Folder*/<br />
 do<br />

@@ -119,18 +119,10 @@ Let’s say we want to filter mtcars that <code>mpg</code> &gt;=15 and then dedu
 <h2>With piping</h2>
 <pre class="r"><code>mtcars_dt[mpg&gt;=15,] %&gt;% 
 unique(by=c(&#39;vs&#39;,&#39;carb&#39;)) %&gt;% .[,head(.SD,3)]</code></pre>
-<pre><code>##     mpg cyl disp  hp drat   wt  qsec vs am gear carb
-## 1: 21.0   6  160 110 3.90 2.62 16.46  0  1    4    4
-## 2: 22.8   4  108  93 3.85 2.32 18.61  1  1    4    1
-## 3: 18.7   8  360 175 3.15 3.44 17.02  0  0    3    2</code></pre>
 </div>
 <div id="without-piping" class="section level2">
 <h2>Without piping</h2>
 <p>This would look like below.</p>
 <pre class="r"><code>unique(mtcars_dt[mpg&gt;=15,],by=c(&#39;vs&#39;,&#39;carb&#39;))[,head(.SD,3)]</code></pre>
-<pre><code>##     mpg cyl disp  hp drat   wt  qsec vs am gear carb
-## 1: 21.0   6  160 110 3.90 2.62 16.46  0  1    4    4
-## 2: 22.8   4  108  93 3.85 2.32 18.61  1  1    4    1
-## 3: 18.7   8  360 175 3.15 3.44 17.02  0  0    3    2</code></pre>
 </div>
 </div>
