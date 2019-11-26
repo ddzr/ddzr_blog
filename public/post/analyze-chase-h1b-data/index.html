@@ -8,7 +8,7 @@
 	<script>(function(d,e){d[e]=d[e].replace("no-js","js");})(document.documentElement,"className");</script>
 	<meta name="description" content="">
 	<meta property="og:title" content="Analyze Chase H1B Data" />
-<meta property="og:description" content="IntroWeb ScrapingOverall EDAQ1: What’s the Top 10 Companies that filed the most H1B application?Q2: Is there a trend that more or more H1B filed in later years?Chase OnlyData CleaningQ2: How Job Level changes over time?Q3: What Job Function has the least gap between Analyst and Management?Q4: How Median Salary Increases over Year?Q5a: How is the salary distributed on the Job Function related to my background?" />
+<meta property="og:description" content="IntroTakeawayWeb ScrapingOverall EDAQ1: What’s the Top 10 Companies that filed the most H1B application?Q2: Is there a trend that more or more H1B filed in later years?Chase OnlyData CleaningQ1: Does File Date different by Start date/Submit Data and Job Level?Q2: How Job Level changes over time?Q3: What Job Function has the least gap between Analyst and Management?" />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="/post/analyze-chase-h1b-data/" />
 <meta property="article:published_time" content="2019-11-19T00:00:00+00:00" />
@@ -80,10 +80,13 @@ if (!doNotTrack) {
 </div>
 		</header><div class="content post__content clearfix">
 			
+<script src="/rmarkdown-libs/kePrint/kePrint.js"></script>
+<link href="/rmarkdown-libs/bsTable/bootstrapTable.min.css" rel="stylesheet" />
 
 <div id="TOC">
 <ul>
 <li><a href="#intro">Intro</a></li>
+<li><a href="#takeaway">Takeaway</a></li>
 <li><a href="#web-scraping">Web Scraping</a></li>
 <li><a href="#overall-eda">Overall EDA</a><ul>
 <li><a href="#q1-whats-the-top-10-companies-that-filed-the-most-h1b-application">Q1: What’s the Top 10 Companies that filed the most H1B application?</a></li>
@@ -91,19 +94,31 @@ if (!doNotTrack) {
 </ul></li>
 <li><a href="#chase-only">Chase Only</a><ul>
 <li><a href="#data-cleaning">Data Cleaning</a></li>
+<li><a href="#q1-does-file-date-different-by-start-datesubmit-data-and-job-level">Q1: Does File Date different by Start date/Submit Data and Job Level?</a></li>
 <li><a href="#q2-how-job-level-changes-over-time">Q2: How Job Level changes over time?</a></li>
 <li><a href="#q3-what-job-function-has-the-least-gap-between-analyst-and-management">Q3: What Job Function has the least gap between Analyst and Management?</a></li>
 <li><a href="#q4-how-median-salary-increases-over-year">Q4: How Median Salary Increases over Year?</a></li>
 <li><a href="#q5a-how-is-the-salary-distributed-on-the-job-function-related-to-my-background">Q5a: How is the salary distributed on the Job Function related to my background?</a></li>
 <li><a href="#q5a-how-are-the-salary-increases-over-year">Q5a: How are the salary increases over year?</a></li>
 </ul></li>
-<li><a href="#takeaway">Takeaway</a></li>
+<li><a href="#conclusion">Conclusion</a></li>
 </ul>
 </div>
 
 <div id="intro" class="section level1">
 <h1>Intro</h1>
 <p><a href="https://h1bdata.info/" class="uri">https://h1bdata.info/</a> could be a great place to understand H1B job salaries. Since myself holds H1B visa, I found interesting to look at the data. To narrow down our topic, I decide to only focus Chase, Wilmington as our analysis today, as that’s Wilmington is the closest major city near my residence and chase is the ideal company I would consider applying jobs, so let’s get started!</p>
+</div>
+<div id="takeaway" class="section level1">
+<h1>Takeaway</h1>
+<p>This blog post aims to understand how H1B salary in chase, Wilmington distributed. To save reader some time, below are couple worth noting things I have through this H1B EDA：</p>
+<ul>
+<li>Chase is the largest H1B file company</li>
+<li>Good timing for applying Non-Entry level jobs would be March-Aug</li>
+<li>Modeling/Data Scientist has the highest paid entry level job positions.</li>
+<li>Marketing Job has nice salary increase trend</li>
+<li>All Job salary decreases in 2020, which it’s hard to tell from now this is due to few data points or forewarning for the recession</li>
+</ul>
 </div>
 <div id="web-scraping" class="section level1">
 <h1>Web Scraping</h1>
@@ -113,12 +128,158 @@ library(tidyverse)
 library(lubridate)
 library(knitr)
 library(kableExtra)
+library(magrittr)
 
 options(kableExtra.html.bsTable = TRUE)
 read_in_html&lt;-read_html(&quot;https://h1bdata.info/index.php?em=&amp;job=&amp;city=Wilmington&amp;year=All+Years&quot;)
-read_in_html_tbl&lt;-data.table::data.table(html_table(read_in_html)[[1]])</code></pre>
-<pre class="r"><code>read_in_html_tbl %&gt;% head(5) %&gt;% kable(&quot;html&quot;) %&gt;%
+read_in_html_tbl&lt;-data.table::data.table(html_table(read_in_html)[[1]])
+
+read_in_html_tbl %&gt;% head(5) %&gt;% kable(&quot;html&quot;) %&gt;%
   kable_styling(bootstrap_options = &quot;striped&quot;, full_width = F,position = &quot;center&quot;)</code></pre>
+<table class="table table-striped" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+EMPLOYER
+</th>
+<th style="text-align:left;">
+JOB TITLE
+</th>
+<th style="text-align:left;">
+BASE SALARY
+</th>
+<th style="text-align:left;">
+LOCATION
+</th>
+<th style="text-align:left;">
+SUBMIT DATE
+</th>
+<th style="text-align:left;">
+START DATE
+</th>
+<th style="text-align:left;">
+CASE STATUS
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+R &amp; L CARRIERS SHARED SERVICES LLC
+</td>
+<td style="text-align:left;">
+.NET DEVELOPER
+</td>
+<td style="text-align:left;">
+60,000
+</td>
+<td style="text-align:left;">
+WILMINGTON, OH
+</td>
+<td style="text-align:left;">
+03/09/2017
+</td>
+<td style="text-align:left;">
+09/08/2017
+</td>
+<td style="text-align:left;">
+CERTIFIED
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+CEM TECHNOLOGY INC
+</td>
+<td style="text-align:left;">
+.NET DEVELOPER
+</td>
+<td style="text-align:left;">
+61,200
+</td>
+<td style="text-align:left;">
+WILMINGTON, DE
+</td>
+<td style="text-align:left;">
+03/30/2017
+</td>
+<td style="text-align:left;">
+04/10/2017
+</td>
+<td style="text-align:left;">
+CERTIFIED
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+PALATIAL TECHNOLOGIES INC
+</td>
+<td style="text-align:left;">
+.NET DEVELOPER
+</td>
+<td style="text-align:left;">
+63,232
+</td>
+<td style="text-align:left;">
+WILMINGTON, DE
+</td>
+<td style="text-align:left;">
+02/09/2016
+</td>
+<td style="text-align:left;">
+02/22/2016
+</td>
+<td style="text-align:left;">
+CERTIFIED
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+PALATIAL TECHNOLOGIES INC
+</td>
+<td style="text-align:left;">
+.NET DEVELOPER
+</td>
+<td style="text-align:left;">
+63,232
+</td>
+<td style="text-align:left;">
+WILMINGTON, DE
+</td>
+<td style="text-align:left;">
+03/01/2016
+</td>
+<td style="text-align:left;">
+03/01/2016
+</td>
+<td style="text-align:left;">
+CERTIFIED
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+PALATIAL TECHNOLOGIES INC
+</td>
+<td style="text-align:left;">
+.NET DEVELOPER
+</td>
+<td style="text-align:left;">
+63,232
+</td>
+<td style="text-align:left;">
+WILMINGTON, DE
+</td>
+<td style="text-align:left;">
+05/17/2016
+</td>
+<td style="text-align:left;">
+05/17/2016
+</td>
+<td style="text-align:left;">
+CERTIFIED
+</td>
+</tr>
+</tbody>
+</table>
 </div>
 <div id="overall-eda" class="section level1">
 <h1>Overall EDA</h1>
@@ -126,24 +287,38 @@ read_in_html_tbl&lt;-data.table::data.table(html_table(read_in_html)[[1]])</code
 <div id="q1-whats-the-top-10-companies-that-filed-the-most-h1b-application" class="section level2">
 <h2>Q1: What’s the Top 10 Companies that filed the most H1B application?</h2>
 <p>As we can see below, Chase is actually the employee that filed the most H1B application with median salary 100k</p>
-<pre class="r"><code>read_in_html_tbl %&gt;%janitor::clean_names() %&gt;%  filter(location %in% c(&#39;WILMINGTON, DE&#39;,&#39;WILMINGTON, DELAWARE&#39;) &amp; case_status==&#39;CERTIFIED&#39;) %&gt;% 
+<pre class="r"><code>read_in_html_tbl %&gt;% janitor::clean_names() %&gt;% 
+  filter(location %in% c(&#39;WILMINGTON, DE&#39;,&#39;WILMINGTON, DELAWARE&#39;) &amp; case_status==&#39;CERTIFIED&#39;) %&gt;% 
   mutate(salary=as.numeric(gsub(&#39;,&#39;,&#39;&#39;,base_salary)),
          start_date=lubridate::mdy(start_date),
          start_date_year=lubridate::year(start_date)
          ) %&gt;% group_by(employer) %&gt;% summarise(n=n(),median_salary=scales::dollar(median(salary),accuracy = 1)) %&gt;% arrange(desc(n)) %&gt;% 
-  head(10) %&gt;%  kable(&quot;html&quot;) %&gt;%
-  kable_styling(bootstrap_options = &quot;striped&quot;, full_width = F,position = &quot;center&quot;)</code></pre>
+  head(10) %&gt;%  mutate(chase=str_detect(employer,&#39;CHASE&#39;),
+                       employer=fct_reorder(employer,n,sum)) %&gt;% ggplot(aes(x=employer,y=n)) +
+  geom_col(aes(fill=as.factor(chase)))+coord_flip() + theme_minimal() + 
+  ggthemes::scale_fill_tableau() + theme(legend.position = &quot;none&quot;) + ylab(&#39;H1B Filed Count&#39;) + xlab(&#39;&#39;) +
+  ggtitle(label = &#39;Top 10 Companies that sponsor H1B visa in Wilmington, Delaware&#39;)</code></pre>
+<p><img src="/post/2019-11-19-analyze-chase-h1b-data_files/figure-html/unnamed-chunk-2-1.png" width="672" /></p>
 </div>
 <div id="q2-is-there-a-trend-that-more-or-more-h1b-filed-in-later-years" class="section level2">
 <h2>Q2: Is there a trend that more or more H1B filed in later years?</h2>
 <p>I was hoping there’re increasing demand for H1B applicants given we’re having historically low unemployment rate. Surprisingly, the number of H1B application filed seems to be quite stable through the years, but the median salary is increasing more rapidly in recent 4 years</p>
-<pre class="r"><code>read_in_html_tbl %&gt;%janitor::clean_names() %&gt;%  filter(location %in% c(&#39;WILMINGTON, DE&#39;,&#39;WILMINGTON, DELAWARE&#39;) &amp; case_status==&#39;CERTIFIED&#39;) %&gt;% 
+<pre class="r"><code>q2_tbl&lt;-read_in_html_tbl %&gt;%janitor::clean_names() %&gt;%  filter(location %in% c(&#39;WILMINGTON, DE&#39;,&#39;WILMINGTON, DELAWARE&#39;) &amp; case_status==&#39;CERTIFIED&#39;) %&gt;% 
   mutate(salary=as.numeric(gsub(&#39;,&#39;,&#39;&#39;,base_salary)),
          start_date=lubridate::mdy(start_date),
          start_date_year=lubridate::year(start_date)
-         ) %&gt;% group_by(start_date_year) %&gt;% summarise(n=n(),median_salary=scales::dollar(median(salary),accuracy = 1)) %&gt;% arrange(start_date_year) %&gt;% 
-  head(10) %&gt;%  kable(&quot;html&quot;) %&gt;%
-  kable_styling(bootstrap_options = &quot;striped&quot;, full_width = F,position = &quot;center&quot;)</code></pre>
+         ) %&gt;% group_by(start_date_year) %&gt;% summarise(n=n(),median_salary=median(salary)) %&gt;% arrange(start_date_year) %&gt;% 
+  head(10) 
+q2_f1&lt;-q2_tbl %&gt;% filter(start_date_year&gt;2014 &amp; start_date_year&lt;2020) %&gt;% ggplot(aes(x=start_date_year, y=n)) +
+  geom_point() + geom_line() + theme(legend.position = &quot;none&quot;) + ylab(&#39;H1B Filed Count&#39;) + xlab(&#39;&#39;) + theme_minimal() +
+  ggtitle(label = &#39;Median Salary increases through out the year but no increasing H1B Sponsorship over time&#39;)
+
+q2_f2&lt;-q2_tbl %&gt;% filter(start_date_year&gt;2014 &amp; start_date_year&lt;2020) %&gt;% ggplot(aes(x=start_date_year, y=median_salary, group=1)) +
+    geom_point() + geom_line() + theme(legend.position = &quot;none&quot;) + ylab(&#39;H1B Median Salary&#39;) + xlab(&#39;&#39;) + theme_minimal() +
+  scale_y_continuous(labels = scales::dollar)
+
+gridExtra::grid.arrange(q2_f1,q2_f2,nrow=2)</code></pre>
+<p><img src="/post/2019-11-19-analyze-chase-h1b-data_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
 </div>
 </div>
 <div id="chase-only" class="section level1">
@@ -191,9 +366,11 @@ de_h1b_chase_process&lt;-de_h1b_chase %&gt;% mutate(job_title=tolower(job_title)
                                                                             job_level %in% c(&#39;Senior Analyst&#39;,&#39;Analyst&#39;) ~ &#39;Analyst&#39;,
                                                                             TRUE ~ &#39;Other&#39;),
                                               it_flag=ifelse(job_function == &#39;IT|Software Engineer&#39;, &#39;IT&#39;,&#39;Non-IT&#39;))%&gt;% filter(job_level_aggregate %in% c(&#39;Management&#39;,&#39;Analyst&#39;))</code></pre>
-<p>Once we cleaned up the data, I can start to answer some questions I had in mind.
-## Q1: Does File Date different by Start date/Submit Data and Job Level?
-As we already knew from prior table that there’s no much trend between number of h1b application and year, I’m interested to see if there’s relationship between job submitted month and job level.
+<p>Once we cleaned up the data, I can start to answer some questions I had in mind.</p>
+</div>
+<div id="q1-does-file-date-different-by-start-datesubmit-data-and-job-level" class="section level2">
+<h2>Q1: Does File Date different by Start date/Submit Data and Job Level?</h2>
+<p>As we already knew from prior table that there’s no much trend between number of h1b application and year, I’m interested to see if there’s relationship between job submitted month and job level.
 As we can see below, for analyst level job, the submitted time peak at March, this is probably due to for most new graduate, their first time h1b file data will be at March as that’s when lottery begins.
 On the contrary, Management level peak at May and August.
 Job submitted traffic seems to be quite low from Sep to Jan, which makes sense, as that’s usually people are waiting their bonus and company run out of budget for hiring.</p>
@@ -206,6 +383,7 @@ Job submitted traffic seems to be quite low from Sep to Jan, which makes sense, 
               rename(month=submit_date_month)
   ) %&gt;% 
   ggplot(aes(x=as.integer(month), y=count, color=category))+
+  ggthemes::scale_color_tableau()  +
   geom_line()+geom_point() + theme_minimal() + scale_x_continuous(breaks=seq(1:12))+
   facet_wrap(~ job_level_aggregate, scales = &quot;free&quot;,nrow = 2)+
   xlab(&quot;month&quot;) +
@@ -217,7 +395,7 @@ Job submitted traffic seems to be quite low from Sep to Jan, which makes sense, 
         panel.grid.minor.x = element_blank())+
   ggtitle(label = &quot;Number of H1B Application Over Month by Date&quot;,
           subtitle =&quot;Analyst Submitted time mainly during Jan-March, suggesting first time H1B Application instead of H1B Transfer&quot; )</code></pre>
-<p><img src="/post/2019-11-19-analyze-chase-h1b-data_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
+<p><img src="/post/2019-11-19-analyze-chase-h1b-data_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
 </div>
 <div id="q2-how-job-level-changes-over-time" class="section level2">
 <h2>Q2: How Job Level changes over time?</h2>
@@ -231,7 +409,7 @@ Interestingly, Chase continue to hiring a lot of entry level job, and Analyst/Ma
   ungroup() %&gt;% 
   mutate(job_level=fct_reorder(job_level,count,sum))%&gt;%
   ggplot(aes(x=as.character(start_date_year),y=count, fill=job_level)) + 
-  ggthemes::scale_fill_excel_new() +
+  ggthemes::scale_fill_tableau()  +
   geom_col( position =&quot;fill&quot; ) +
   geom_text(size=3,aes(label = job_percent), position = position_fill(vjust = 0.5))+
   theme_minimal()+
@@ -243,7 +421,7 @@ Interestingly, Chase continue to hiring a lot of entry level job, and Analyst/Ma
   theme(legend.position=&quot;top&quot;,
         legend.justification=&#39;left&#39;,
         legend.direction=&#39;horizontal&#39;)</code></pre>
-<p><img src="/post/2019-11-19-analyze-chase-h1b-data_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
+<p><img src="/post/2019-11-19-analyze-chase-h1b-data_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
 </div>
 <div id="q3-what-job-function-has-the-least-gap-between-analyst-and-management" class="section level2">
 <h2>Q3: What Job Function has the least gap between Analyst and Management?</h2>
@@ -269,8 +447,9 @@ scale_y_continuous(labels = scales::dollar,
   ylab(label = &quot;&quot;) +
   labs(fill = &quot;Job Level&quot;)+
   ggtitle(label=&quot;Mean Salary by Job Level&quot;, 
-          subtitle = &quot;Data Scientist has highest mean salary and also lowest gap between Management and Analyst&quot;)</code></pre>
-<p><img src="/post/2019-11-19-analyze-chase-h1b-data_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
+          subtitle = &quot;Data Scientist has highest mean salary and also lowest gap between Management and Analyst&quot;) +
+  ggthemes::scale_fill_tableau() </code></pre>
+<p><img src="/post/2019-11-19-analyze-chase-h1b-data_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
 </div>
 <div id="q4-how-median-salary-increases-over-year" class="section level2">
 <h2>Q4: How Median Salary Increases over Year?</h2>
@@ -287,6 +466,7 @@ p4_1&lt;-analyst_manager_lift %&gt;% filter(!is.na(salary_increase_rate)) %&gt;%
   geom_point()  + geom_line(aes(colour=`Job Level`))+ 
   facet_wrap(~it_flag+`Job Level`) +theme_minimal() +
   scale_y_continuous(labels = scales::percent) +
+  ggthemes::scale_color_tableau() +
   theme(legend.position=&quot;top&quot;,
         legend.justification=&#39;left&#39;,
         legend.direction=&#39;horizontal&#39;) +
@@ -313,7 +493,7 @@ p4_2&lt;-de_h1b_chase_process %&gt;%
   ggtitle(label = &quot;Salary Increase Rate Compared to Prior Year&quot;)
 
 gridExtra::grid.arrange(p4_1,p4_2,nrow=2,heights=c(3/4,1/4))</code></pre>
-<p><img src="/post/2019-11-19-analyze-chase-h1b-data_files/figure-html/unnamed-chunk-9-1.png" width="672" /></p>
+<p><img src="/post/2019-11-19-analyze-chase-h1b-data_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
 </div>
 <div id="q5a-how-is-the-salary-distributed-on-the-job-function-related-to-my-background" class="section level2">
 <h2>Q5a: How is the salary distributed on the Job Function related to my background?</h2>
@@ -325,7 +505,7 @@ gridExtra::grid.arrange(p4_1,p4_2,nrow=2,heights=c(3/4,1/4))</code></pre>
   ggplot(aes(x=job_level,y=salary, colour=job_function)) + 
   geom_boxplot() +
   geom_jitter(width = 0.1, alpha=0.7)+
-  ggthemes::scale_color_excel_new()+
+  ggthemes::scale_color_tableau()+
   facet_wrap(~ job_function) + theme_minimal() +
   theme(strip.text.x = element_text(size = 10, face = &quot;bold&quot;),
         legend.position = &quot;none&quot;)+
@@ -333,7 +513,7 @@ gridExtra::grid.arrange(p4_1,p4_2,nrow=2,heights=c(3/4,1/4))</code></pre>
   xlab(&quot;&quot;)+ylab(&quot;&quot;) +
   ggtitle(label = &quot;Focus on Jobs related to my interest&quot;,
           subtitle = &quot;Modeling jobs seem to have many data points and high median/mean salary&quot;)</code></pre>
-<p><img src="/post/2019-11-19-analyze-chase-h1b-data_files/figure-html/unnamed-chunk-10-1.png" width="672" /></p>
+<p><img src="/post/2019-11-19-analyze-chase-h1b-data_files/figure-html/unnamed-chunk-9-1.png" width="672" /></p>
 </div>
 <div id="q5a-how-are-the-salary-increases-over-year" class="section level2">
 <h2>Q5a: How are the salary increases over year?</h2>
@@ -350,7 +530,7 @@ Overall trend, the modeling job enjoys its annual salary boost, and Marketing sa
   xlab(&quot;&quot;)+ylab(&quot;&quot;) + theme_minimal()+  
   theme(legend.position=&quot;top&quot;,legend.justification=&#39;left&#39;,
         legend.direction=&#39;horizontal&#39;,  panel.grid.minor.x = element_blank()) +
-  ggthemes::scale_color_excel_new() +
+  ggthemes::scale_color_tableau() +
   ggtitle(label = &quot;Focus on Jobs related to my interest, Part2&quot;,
           subtitle = &quot;Modeling position has good growth potential over time&quot;)
 
@@ -367,22 +547,15 @@ p5_2&lt;-de_h1b_chase_process %&gt;% filter(
   xlab(&quot;&quot;)+ylab(&quot;&quot;) + theme_minimal()+  
   theme(  panel.grid.minor.x = element_blank(),
   legend.position = &quot;none&quot;) +
-  ggthemes::scale_color_excel_new()
+  ggthemes::scale_color_tableau()
 
 gridExtra::grid.arrange(p5_1,p5_2,nrow=2)</code></pre>
-<p><img src="/post/2019-11-19-analyze-chase-h1b-data_files/figure-html/unnamed-chunk-11-1.png" width="672" /></p>
+<p><img src="/post/2019-11-19-analyze-chase-h1b-data_files/figure-html/unnamed-chunk-10-1.png" width="672" /></p>
 </div>
 </div>
-<div id="takeaway" class="section level1">
-<h1>Takeaway</h1>
-<p>This blog post aims to understand how H1B salary in chase, Wilmington distributed. Couple worth noting things：</p>
-<ul>
-<li>Chase is the largest H1B file company</li>
-<li>Good timing for applying Non-Entry level jobs would be March-Aug</li>
-<li>Modeling/Data Scientist has the highest paid entry level job positions.</li>
-<li>Marketing Job has nice salary increase trend</li>
-<li>All Job salary decreases in 2020, which it’s hard to tell from now this is due to few data points or forewarning for the recession</li>
-</ul>
+<div id="conclusion" class="section level1">
+<h1>Conclusion</h1>
+<p>I felt learning a lot about ggplot fine tuning through out this blog post, it’s a long journey of life learning, hoping I could keep the habit of writing the blog and sharpen my coding/writing skills progressively.</p>
 </div>
 
 		</div>

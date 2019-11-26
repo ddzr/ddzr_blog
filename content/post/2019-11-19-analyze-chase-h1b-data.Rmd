@@ -15,14 +15,18 @@ output:
     toc: true
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = T,
-                      results = "hide")
-```
-
 # Intro 
 
 https://h1bdata.info/ could be a great place to understand H1B job salaries. Since myself holds H1B visa, I found interesting to look at the data. To narrow down our topic, I decide to only focus Chase, Wilmington as our analysis today, as that's Wilmington is the closest major city near my residence and chase is the ideal company I would consider applying jobs, so let's get started!
+
+# Takeaway 
+This blog post aims to understand how H1B salary in chase, Wilmington distributed. To save reader some time, below are couple worth noting things I have through this H1B EDA： 
+
+* Chase is the largest H1B file company
+* Good timing for applying Non-Entry level jobs would be March-Aug 
+* Modeling/Data Scientist has the highest paid entry level job positions.
+* Marketing Job has nice salary increase trend 
+* All Job salary decreases in 2020, which it's hard to tell from now this is due to few data points or forewarning for the recession
 
 # Web Scraping 
 
@@ -34,41 +38,56 @@ library(tidyverse)
 library(lubridate)
 library(knitr)
 library(kableExtra)
+library(magrittr)
 
 options(kableExtra.html.bsTable = TRUE)
 read_in_html<-read_html("https://h1bdata.info/index.php?em=&job=&city=Wilmington&year=All+Years")
 read_in_html_tbl<-data.table::data.table(html_table(read_in_html)[[1]])
-```
-```{r}
+
 read_in_html_tbl %>% head(5) %>% kable("html") %>%
   kable_styling(bootstrap_options = "striped", full_width = F,position = "center")
 ```
 
 # Overall EDA
-Before jumping to Chase only jobs, let's answer some quick questions
+Before jumping to Chase only jobs, let's answer some quick questions 
+
 
 ## Q1: What's the Top 10 Companies that filed the most H1B application?
 As we can see below, Chase is actually the employee that filed the most H1B application with median salary 100k
 ```{r}
-read_in_html_tbl %>%janitor::clean_names() %>%  filter(location %in% c('WILMINGTON, DE','WILMINGTON, DELAWARE') & case_status=='CERTIFIED') %>% 
+read_in_html_tbl %>% janitor::clean_names() %>% 
+  filter(location %in% c('WILMINGTON, DE','WILMINGTON, DELAWARE') & case_status=='CERTIFIED') %>% 
   mutate(salary=as.numeric(gsub(',','',base_salary)),
          start_date=lubridate::mdy(start_date),
          start_date_year=lubridate::year(start_date)
          ) %>% group_by(employer) %>% summarise(n=n(),median_salary=scales::dollar(median(salary),accuracy = 1)) %>% arrange(desc(n)) %>% 
-  head(10) %>%  kable("html") %>%
-  kable_styling(bootstrap_options = "striped", full_width = F,position = "center")
+  head(10) %>%  mutate(chase=str_detect(employer,'CHASE'),
+                       employer=fct_reorder(employer,n,sum)) %>% ggplot(aes(x=employer,y=n)) +
+  geom_col(aes(fill=as.factor(chase)))+coord_flip() + theme_minimal() + 
+  ggthemes::scale_fill_tableau() + theme(legend.position = "none") + ylab('H1B Filed Count') + xlab('') +
+  ggtitle(label = 'Top 10 Companies that sponsor H1B visa in Wilmington, Delaware')
 ```
 
 ## Q2: Is there a trend that more or more H1B filed in later years?
 I was hoping there're increasing demand for H1B applicants given we're having historically low unemployment rate. Surprisingly, the number of H1B application filed seems to be quite stable through the years, but the median salary is increasing more rapidly in recent 4 years
 ```{r}
-read_in_html_tbl %>%janitor::clean_names() %>%  filter(location %in% c('WILMINGTON, DE','WILMINGTON, DELAWARE') & case_status=='CERTIFIED') %>% 
+q2_tbl<-read_in_html_tbl %>%janitor::clean_names() %>%  filter(location %in% c('WILMINGTON, DE','WILMINGTON, DELAWARE') & case_status=='CERTIFIED') %>% 
   mutate(salary=as.numeric(gsub(',','',base_salary)),
          start_date=lubridate::mdy(start_date),
          start_date_year=lubridate::year(start_date)
-         ) %>% group_by(start_date_year) %>% summarise(n=n(),median_salary=scales::dollar(median(salary),accuracy = 1)) %>% arrange(start_date_year) %>% 
-  head(10) %>%  kable("html") %>%
-  kable_styling(bootstrap_options = "striped", full_width = F,position = "center")
+         ) %>% group_by(start_date_year) %>% summarise(n=n(),median_salary=median(salary)) %>% arrange(start_date_year) %>% 
+  head(10) 
+q2_f1<-q2_tbl %>% filter(start_date_year>2014 & start_date_year<2020) %>% ggplot(aes(x=start_date_year, y=n)) +
+  geom_point() + geom_line() + theme(legend.position = "none") + ylab('H1B Filed Count') + xlab('') + theme_minimal() +
+  ggtitle(label = 'Median Salary increases through out the year but no increasing H1B Sponsorship over time')
+
+q2_f2<-q2_tbl %>% filter(start_date_year>2014 & start_date_year<2020) %>% ggplot(aes(x=start_date_year, y=median_salary, group=1)) +
+    geom_point() + geom_line() + theme(legend.position = "none") + ylab('H1B Median Salary') + xlab('') + theme_minimal() +
+  scale_y_continuous(labels = scales::dollar)
+
+gridExtra::grid.arrange(q2_f1,q2_f2,nrow=2)
+
+
 ```
 
 
@@ -118,7 +137,8 @@ de_h1b_chase_process<-de_h1b_chase %>% mutate(job_title=tolower(job_title),
                                               it_flag=ifelse(job_function == 'IT|Software Engineer', 'IT','Non-IT'))%>% filter(job_level_aggregate %in% c('Management','Analyst'))
 ```
 
-Once we cleaned up the data, I can start to answer some questions I had in mind.
+Once we cleaned up the data, I can start to answer some questions I had in mind. 
+
 ## Q1: Does File Date different by Start date/Submit Data and Job Level?
 As we already knew from prior table that there's no much trend between number of h1b application and year, I'm interested to see if there's relationship between job submitted month and job level. 
 As we can see below, for analyst level job, the submitted time peak at March, this is probably due to for most new graduate, their first time h1b file data will be at March as that's when lottery begins. 
@@ -134,6 +154,7 @@ de_h1b_chase_process %>% group_by(job_level_aggregate,start_date_month) %>%
               rename(month=submit_date_month)
   ) %>% 
   ggplot(aes(x=as.integer(month), y=count, color=category))+
+  ggthemes::scale_color_tableau()  +
   geom_line()+geom_point() + theme_minimal() + scale_x_continuous(breaks=seq(1:12))+
   facet_wrap(~ job_level_aggregate, scales = "free",nrow = 2)+
   xlab("month") +
@@ -160,7 +181,7 @@ de_h1b_chase_process %>% group_by(start_date_year,job_level) %>%
   ungroup() %>% 
   mutate(job_level=fct_reorder(job_level,count,sum))%>%
   ggplot(aes(x=as.character(start_date_year),y=count, fill=job_level)) + 
-  ggthemes::scale_fill_excel_new() +
+  ggthemes::scale_fill_tableau()  +
   geom_col( position ="fill" ) +
   geom_text(size=3,aes(label = job_percent), position = position_fill(vjust = 0.5))+
   theme_minimal()+
@@ -199,7 +220,8 @@ scale_y_continuous(labels = scales::dollar,
   ylab(label = "") +
   labs(fill = "Job Level")+
   ggtitle(label="Mean Salary by Job Level", 
-          subtitle = "Data Scientist has highest mean salary and also lowest gap between Management and Analyst")
+          subtitle = "Data Scientist has highest mean salary and also lowest gap between Management and Analyst") +
+  ggthemes::scale_fill_tableau() 
  
 ```
 
@@ -219,6 +241,7 @@ p4_1<-analyst_manager_lift %>% filter(!is.na(salary_increase_rate)) %>%
   geom_point()  + geom_line(aes(colour=`Job Level`))+ 
   facet_wrap(~it_flag+`Job Level`) +theme_minimal() +
   scale_y_continuous(labels = scales::percent) +
+  ggthemes::scale_color_tableau() +
   theme(legend.position="top",
         legend.justification='left',
         legend.direction='horizontal') +
@@ -259,7 +282,7 @@ de_h1b_chase_process %>% filter(
   ggplot(aes(x=job_level,y=salary, colour=job_function)) + 
   geom_boxplot() +
   geom_jitter(width = 0.1, alpha=0.7)+
-  ggthemes::scale_color_excel_new()+
+  ggthemes::scale_color_tableau()+
   facet_wrap(~ job_function) + theme_minimal() +
   theme(strip.text.x = element_text(size = 10, face = "bold"),
         legend.position = "none")+
@@ -285,7 +308,7 @@ p5_1<-
   xlab("")+ylab("") + theme_minimal()+  
   theme(legend.position="top",legend.justification='left',
         legend.direction='horizontal',  panel.grid.minor.x = element_blank()) +
-  ggthemes::scale_color_excel_new() +
+  ggthemes::scale_color_tableau() +
   ggtitle(label = "Focus on Jobs related to my interest, Part2",
           subtitle = "Modeling position has good growth potential over time")
 
@@ -302,19 +325,12 @@ p5_2<-de_h1b_chase_process %>% filter(
   xlab("")+ylab("") + theme_minimal()+  
   theme(  panel.grid.minor.x = element_blank(),
   legend.position = "none") +
-  ggthemes::scale_color_excel_new()
+  ggthemes::scale_color_tableau()
 
 gridExtra::grid.arrange(p5_1,p5_2,nrow=2)
 ```
 
-# Takeaway 
-This blog post aims to understand how H1B salary in chase, Wilmington distributed. Couple worth noting things： 
+# Conclusion 
 
-* Chase is the largest H1B file company
-* Good timing for applying Non-Entry level jobs would be March-Aug 
-* Modeling/Data Scientist has the highest paid entry level job positions.
-* Marketing Job has nice salary increase trend 
-* All Job salary decreases in 2020, which it's hard to tell from now this is due to few data points or forewarning for the recession
-
-
+I felt learning a lot about ggplot fine tuning through out this blog post, it's a long journey of life learning, hoping I could keep the habit of writing the blog and sharpen my coding/writing skills progressively. 
 

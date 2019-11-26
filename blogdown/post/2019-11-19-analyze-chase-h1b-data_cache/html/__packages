@@ -13,3 +13,4 @@ forcats
 lubridate
 knitr
 kableExtra
+magrittr
