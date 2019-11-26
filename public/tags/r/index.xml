@@ -6,10 +6,19 @@
     <description>Recent content in R on DDZR Blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Tue, 20 Aug 2019 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Tue, 19 Nov 2019 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/tags/r/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Analyze Chase H1B Data</title>
+      <link>/post/analyze-chase-h1b-data/</link>
+      <pubDate>Tue, 19 Nov 2019 00:00:00 +0000</pubDate>
+      
+      <guid>/post/analyze-chase-h1b-data/</guid>
+      <description>IntroWeb ScrapingOverall EDAQ1: What’s the Top 10 Companies that filed the most H1B application?Q2: Is there a trend that more or more H1B filed in later years?Chase OnlyData CleaningQ2: How Job Level changes over time?Q3: What Job Function has the least gap between Analyst and Management?Q4: How Median Salary Increases over Year?Q5a: How is the salary distributed on the Job Function related to my background?</description>
+    </item>
     
     <item>
       <title>Moving Files Around In R</title>

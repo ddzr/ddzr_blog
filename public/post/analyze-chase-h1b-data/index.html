@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html class="no-js" lang="en-us">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>Analyze Chase H1B Data - DDZR Blog</title>
+	<script>(function(d,e){d[e]=d[e].replace("no-js","js");})(document.documentElement,"className");</script>
+	<meta name="description" content="">
+	<meta property="og:title" content="Analyze Chase H1B Data" />
+<meta property="og:description" content="IntroWeb ScrapingOverall EDAQ1: What’s the Top 10 Companies that filed the most H1B application?Q2: Is there a trend that more or more H1B filed in later years?Chase OnlyData CleaningQ2: How Job Level changes over time?Q3: What Job Function has the least gap between Analyst and Management?Q4: How Median Salary Increases over Year?Q5a: How is the salary distributed on the Job Function related to my background?" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="/post/analyze-chase-h1b-data/" />
+<meta property="article:published_time" content="2019-11-19T00:00:00+00:00" />
+<meta property="article:modified_time" content="2019-11-19T00:00:00+00:00" />
+
+	
+	<link rel="dns-prefetch" href="//fonts.googleapis.com">
+	<link rel="dns-prefetch" href="//fonts.gstatic.com">
+	<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:400,400i,700">
+	<link rel="stylesheet" href="/css/style.css">
+	
+	<link rel="shortcut icon" href="/favicon.ico">
+		
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'UA-146390450-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+</head>
+<body class="body">
+	<div class="container container--outer">
+		<header class="header">
+	<div class="container">
+		<div class="logo">
+			<a class="logo__link" href="/" title="DDZR Blog" rel="home">
+				<div class="logo__title">DDZR Blog</div>
+				<div class="logo__tagline">DDZR Blog</div>
+			</a>
+		</div>
+		
+<nav class="menu">
+	<button class="menu__btn" aria-haspopup="true" aria-expanded="false" tabindex="0">
+		<span class="menu__btn-title" tabindex="-1">Menu</span>
+	</button>
+	<ul class="menu__list">
+		<li class="menu__item">
+			<a class="menu__link" href="/about/">About Me</a>
+		</li>
+	</ul>
+</nav>
+
+	</div>
+</header>
+
+<link href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
+		<div class="wrapper flex">
+			<div class="primary">
+			
+<main class="main" role="main">
+	<article class="post">
+		<header class="post__header">
+			<h1 class="post__title">Analyze Chase H1B Data</h1>
+			<div class="post__meta meta">
+<div class="meta__item-datetime meta__item">
+	<svg class="meta__icon icon icon-time" width="16" height="14" viewBox="0 0 30 28"><path d="M15 0C7 0 1 6 1 14s6 14 14 14 14-6 14-14S23 0 15 0zm0 25C9 25 4 20 4 14S9 3 15 3s11 5 11 11-5 11-11 11zm1-18h-2v8.4l6.8 4.4L22 18l-6-3.8V7z"/></svg>
+	<time class="meta__text" datetime="2019-11-19T00:00:00">November 19, 2019</time>
+</div>
+
+<div class="meta__item-categories meta__item">
+	<svg class="meta__icon icon icon-category" width="16" height="16" viewBox="0 0 16 16"><path d="m7 2l1 2h8v11h-16v-13z"/></svg>
+	<span class="meta__text"><a class="meta__link" href="/categories/eda" rel="category">EDA</a></span>
+</div>
+</div>
+		</header><div class="content post__content clearfix">
+			
+
+<div id="TOC">
+<ul>
+<li><a href="#intro">Intro</a></li>
+<li><a href="#web-scraping">Web Scraping</a></li>
+<li><a href="#overall-eda">Overall EDA</a><ul>
+<li><a href="#q1-whats-the-top-10-companies-that-filed-the-most-h1b-application">Q1: What’s the Top 10 Companies that filed the most H1B application?</a></li>
+<li><a href="#q2-is-there-a-trend-that-more-or-more-h1b-filed-in-later-years">Q2: Is there a trend that more or more H1B filed in later years?</a></li>
+</ul></li>
+<li><a href="#chase-only">Chase Only</a><ul>
+<li><a href="#data-cleaning">Data Cleaning</a></li>
+<li><a href="#q2-how-job-level-changes-over-time">Q2: How Job Level changes over time?</a></li>
+<li><a href="#q3-what-job-function-has-the-least-gap-between-analyst-and-management">Q3: What Job Function has the least gap between Analyst and Management?</a></li>
+<li><a href="#q4-how-median-salary-increases-over-year">Q4: How Median Salary Increases over Year?</a></li>
+<li><a href="#q5a-how-is-the-salary-distributed-on-the-job-function-related-to-my-background">Q5a: How is the salary distributed on the Job Function related to my background?</a></li>
+<li><a href="#q5a-how-are-the-salary-increases-over-year">Q5a: How are the salary increases over year?</a></li>
+</ul></li>
+<li><a href="#takeaway">Takeaway</a></li>
+</ul>
+</div>
+
+<div id="intro" class="section level1">
+<h1>Intro</h1>
+<p><a href="https://h1bdata.info/" class="uri">https://h1bdata.info/</a> could be a great place to understand H1B job salaries. Since myself holds H1B visa, I found interesting to look at the data. To narrow down our topic, I decide to only focus Chase, Wilmington as our analysis today, as that’s Wilmington is the closest major city near my residence and chase is the ideal company I would consider applying jobs, so let’s get started!</p>
+</div>
+<div id="web-scraping" class="section level1">
+<h1>Web Scraping</h1>
+<p>We’ll use <code>rvest</code> package to read in the table,luckily, the h1b website is already in a great format that was ready for web scraping, we simply use <code>read_html</code>/<code>html_table</code> to read in the tabular data into r.</p>
+<pre class="r"><code>library(rvest)
+library(tidyverse)
+library(lubridate)
+library(knitr)
+library(kableExtra)
+
+options(kableExtra.html.bsTable = TRUE)
+read_in_html&lt;-read_html(&quot;https://h1bdata.info/index.php?em=&amp;job=&amp;city=Wilmington&amp;year=All+Years&quot;)
+read_in_html_tbl&lt;-data.table::data.table(html_table(read_in_html)[[1]])</code></pre>
+<pre class="r"><code>read_in_html_tbl %&gt;% head(5) %&gt;% kable(&quot;html&quot;) %&gt;%
+  kable_styling(bootstrap_options = &quot;striped&quot;, full_width = F,position = &quot;center&quot;)</code></pre>
+</div>
+<div id="overall-eda" class="section level1">
+<h1>Overall EDA</h1>
+<p>Before jumping to Chase only jobs, let’s answer some quick questions</p>
+<div id="q1-whats-the-top-10-companies-that-filed-the-most-h1b-application" class="section level2">
+<h2>Q1: What’s the Top 10 Companies that filed the most H1B application?</h2>
+<p>As we can see below, Chase is actually the employee that filed the most H1B application with median salary 100k</p>
+<pre class="r"><code>read_in_html_tbl %&gt;%janitor::clean_names() %&gt;%  filter(location %in% c(&#39;WILMINGTON, DE&#39;,&#39;WILMINGTON, DELAWARE&#39;) &amp; case_status==&#39;CERTIFIED&#39;) %&gt;% 
+  mutate(salary=as.numeric(gsub(&#39;,&#39;,&#39;&#39;,base_salary)),
+         start_date=lubridate::mdy(start_date),
+         start_date_year=lubridate::year(start_date)
+         ) %&gt;% group_by(employer) %&gt;% summarise(n=n(),median_salary=scales::dollar(median(salary),accuracy = 1)) %&gt;% arrange(desc(n)) %&gt;% 
+  head(10) %&gt;%  kable(&quot;html&quot;) %&gt;%
+  kable_styling(bootstrap_options = &quot;striped&quot;, full_width = F,position = &quot;center&quot;)</code></pre>
+</div>
+<div id="q2-is-there-a-trend-that-more-or-more-h1b-filed-in-later-years" class="section level2">
+<h2>Q2: Is there a trend that more or more H1B filed in later years?</h2>
+<p>I was hoping there’re increasing demand for H1B applicants given we’re having historically low unemployment rate. Surprisingly, the number of H1B application filed seems to be quite stable through the years, but the median salary is increasing more rapidly in recent 4 years</p>
+<pre class="r"><code>read_in_html_tbl %&gt;%janitor::clean_names() %&gt;%  filter(location %in% c(&#39;WILMINGTON, DE&#39;,&#39;WILMINGTON, DELAWARE&#39;) &amp; case_status==&#39;CERTIFIED&#39;) %&gt;% 
+  mutate(salary=as.numeric(gsub(&#39;,&#39;,&#39;&#39;,base_salary)),
+         start_date=lubridate::mdy(start_date),
+         start_date_year=lubridate::year(start_date)
+         ) %&gt;% group_by(start_date_year) %&gt;% summarise(n=n(),median_salary=scales::dollar(median(salary),accuracy = 1)) %&gt;% arrange(start_date_year) %&gt;% 
+  head(10) %&gt;%  kable(&quot;html&quot;) %&gt;%
+  kable_styling(bootstrap_options = &quot;striped&quot;, full_width = F,position = &quot;center&quot;)</code></pre>
+</div>
+</div>
+<div id="chase-only" class="section level1">
+<h1>Chase Only</h1>
+<p>The reason why I Picked Chase is two fold</p>
+<ul>
+<li>Chase is the employee that sponsored the most H1B jobs</li>
+<li>I’m pretty familiar with Chase Job Titles and hope could find more interesting store given this info.</li>
+</ul>
+<div id="data-cleaning" class="section level2">
+<h2>Data Cleaning</h2>
+<p>Before plotting anything, we need to do some data cleaning work. Mainly, I’ll use <code>job_title</code> column from the H1B data to create additional columns like <code>job function</code>,<code>job level</code>.
+Any job that has associate/analyst keywords will belong to analyst job level and any job has manager/VP/director will belong to management job level.</p>
+<pre class="r"><code>de_h1b_chase&lt;-read_in_html_tbl %&gt;% janitor::clean_names() %&gt;% 
+  filter(location %in% c(&#39;WILMINGTON, DE&#39;,&#39;WILMINGTON, DELAWARE&#39;) &amp; case_status==&#39;CERTIFIED&#39;) %&gt;% 
+  mutate(salary=as.numeric(gsub(&#39;,&#39;,&#39;&#39;,base_salary)),
+         submit_date=lubridate::mdy(submit_date),
+         start_date=lubridate::mdy(start_date),
+         start_date_year=lubridate::year(start_date),
+         start_date_month=lubridate::month(start_date),
+         submit_date_year=lubridate::year(submit_date),
+         submit_date_month=lubridate::month(submit_date)
+  ) %&gt;% select(-base_salary) %&gt;% filter(submit_date_year&gt;2014 &amp; str_detect(employer,&#39;CHASE&#39;))
+
+de_h1b_chase_process&lt;-de_h1b_chase %&gt;% mutate(job_title=tolower(job_title),
+                                              job_function=case_when(str_detect(job_title,&#39;tech ops|technical|database|software|engineer|application|architect|developer|infrastructure|technology&#39;) ~ &#39;IT|Software Engineer&#39;,
+                                                                     str_detect(job_title,&#39;data scientist&#39;) ~ &#39;Data Scientist&#39;,
+                                                                     str_detect(job_title,&#39;control|assuan|audi|loss|assurance|quality&#39;) ~ &#39;Quality&#39;,
+                                                                     str_detect(job_title,&#39;business systems analyst|business process|business tech|business opera&#39;) ~&#39;Business Systems Analyst&#39;,
+                                                                     str_detect(job_title,&#39;finan&#39;)  ~ &#39;Finance&#39;,
+                                                                     str_detect(job_title,&#39;modeling|modeler&#39;) ~ &#39;Modeling&#39;,
+                                                                     (str_detect(job_title,&#39;(risk|fraud)&#39;) &amp;  !str_detect(job_title,&#39;modeling&#39;)) ~ &#39;Risk/Fraud&#39;,
+                                                                     (str_detect(job_title,&#39;marketing&#39;) &amp;  !str_detect(job_title,&#39;modeling&#39;) &amp;  !str_detect(job_title,&#39;(risk|fraud)&#39;)) ~ &#39;Marketing&#39;,
+                                                                     str_detect(job_title,&#39;strategic|strategy&#39;) ~ &#39;Strategy&#39;,
+                                                                     str_detect(job_title,&#39;analytic|analyst&#39;) ~ &#39;Analytics/Analyst&#39;,
+                                                                     TRUE ~ &#39;Other&#39;),
+                                              job_level=case_when(
+                                                str_detect(job_title,&#39;managing|director&#39;) ~ &#39;Director&#39;,
+                                                str_detect(job_title,&#39;manager|vice president|vp&#39;) &amp;  str_detect(job_title,&#39;sr|senior|lead|ii|iii|2|3&#39;) ~ &#39;Senior Manager&#39;,                   
+                                                str_detect(job_title,&#39;manager|vice president|vp&#39;) ~ &#39;Manager&#39;,
+                                                str_detect(job_title,&#39;analyst|associate&#39;) &amp; str_detect(job_title,&#39;sr|senior|lead|ii|iii|2|3&#39;)~ &#39;Senior Analyst&#39;,
+                                                str_detect(job_title,&#39;analyst|associate&#39;) ~ &#39;Analyst&#39;,
+                                                TRUE~ &#39;Other&#39;),
+                                              job_level_aggregate=case_when(job_level %in% c(&#39;Director&#39;,&#39;Senior Manager&#39;,&#39;Manager&#39;) ~ &#39;Management&#39;,
+                                                                            job_level %in% c(&#39;Senior Analyst&#39;,&#39;Analyst&#39;) ~ &#39;Analyst&#39;,
+                                                                            TRUE ~ &#39;Other&#39;),
+                                              it_flag=ifelse(job_function == &#39;IT|Software Engineer&#39;, &#39;IT&#39;,&#39;Non-IT&#39;))%&gt;% filter(job_level_aggregate %in% c(&#39;Management&#39;,&#39;Analyst&#39;))</code></pre>
+<p>Once we cleaned up the data, I can start to answer some questions I had in mind.
+## Q1: Does File Date different by Start date/Submit Data and Job Level?
+As we already knew from prior table that there’s no much trend between number of h1b application and year, I’m interested to see if there’s relationship between job submitted month and job level.
+As we can see below, for analyst level job, the submitted time peak at March, this is probably due to for most new graduate, their first time h1b file data will be at March as that’s when lottery begins.
+On the contrary, Management level peak at May and August.
+Job submitted traffic seems to be quite low from Sep to Jan, which makes sense, as that’s usually people are waiting their bonus and company run out of budget for hiring.</p>
+<pre class="r"><code>de_h1b_chase_process %&gt;% group_by(job_level_aggregate,start_date_month) %&gt;% 
+  summarise(count=n())%&gt;% mutate(category=&quot;Start Date&quot;) %&gt;% 
+  rename(month=start_date_month) %&gt;% 
+  filter() %&gt;% 
+  bind_rows(de_h1b_chase_process %&gt;% group_by(job_level_aggregate,submit_date_month) %&gt;% 
+              summarise(count=n())%&gt;% mutate(category=&quot;Submit Date&quot;) %&gt;% 
+              rename(month=submit_date_month)
+  ) %&gt;% 
+  ggplot(aes(x=as.integer(month), y=count, color=category))+
+  geom_line()+geom_point() + theme_minimal() + scale_x_continuous(breaks=seq(1:12))+
+  facet_wrap(~ job_level_aggregate, scales = &quot;free&quot;,nrow = 2)+
+  xlab(&quot;month&quot;) +
+  ylab(&quot;Number of H1B Application&quot;) +
+  theme(legend.position=&quot;top&quot;,
+        legend.justification=&#39;left&#39;,
+        legend.direction=&#39;horizontal&#39;)+
+  theme(legend.position=&quot;top&quot;,  panel.grid.major.x = element_blank() , 
+        panel.grid.minor.x = element_blank())+
+  ggtitle(label = &quot;Number of H1B Application Over Month by Date&quot;,
+          subtitle =&quot;Analyst Submitted time mainly during Jan-March, suggesting first time H1B Application instead of H1B Transfer&quot; )</code></pre>
+<p><img src="/post/2019-11-19-analyze-chase-h1b-data_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
+</div>
+<div id="q2-how-job-level-changes-over-time" class="section level2">
+<h2>Q2: How Job Level changes over time?</h2>
+<p>There might exist some trend between job level over time, like what I heard from other companies have been starting to only offer H1B transfer for non-entry-level jobs. So it’s worth to check if Chase follow the same trend.
+Interestingly, Chase continue to hiring a lot of entry level job, and Analyst/Manager level jobs are actually growing and senior analyst proportion decreases over time.</p>
+<pre class="r"><code>de_h1b_chase_process %&gt;% group_by(start_date_year,job_level) %&gt;% 
+  summarise(count=n()) %&gt;% 
+  ungroup() %&gt;% 
+  group_by(start_date_year) %&gt;% 
+  mutate(job_percent=scales::percent(count/sum(count),accuracy = 2)) %&gt;% 
+  ungroup() %&gt;% 
+  mutate(job_level=fct_reorder(job_level,count,sum))%&gt;%
+  ggplot(aes(x=as.character(start_date_year),y=count, fill=job_level)) + 
+  ggthemes::scale_fill_excel_new() +
+  geom_col( position =&quot;fill&quot; ) +
+  geom_text(size=3,aes(label = job_percent), position = position_fill(vjust = 0.5))+
+  theme_minimal()+
+  theme(legend.position=&quot;top&quot;,  panel.grid.major.x = element_blank() , 
+        panel.grid.minor.x = element_blank()) + 
+  ggtitle(label=&quot;Chase Certified H1B by Job Level Over Time&quot;, 
+          subtitle = &quot;Manager/Analyst position replace Senior Analyst portion Over Time&quot;) +
+  scale_y_continuous(labels = scales::percent) + xlab(&quot;&quot;) + ylab(&quot;&quot;) +
+  theme(legend.position=&quot;top&quot;,
+        legend.justification=&#39;left&#39;,
+        legend.direction=&#39;horizontal&#39;)</code></pre>
+<p><img src="/post/2019-11-19-analyze-chase-h1b-data_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
+</div>
+<div id="q3-what-job-function-has-the-least-gap-between-analyst-and-management" class="section level2">
+<h2>Q3: What Job Function has the least gap between Analyst and Management?</h2>
+<p>Interesting to see that Data Scientist is the job function with least difference between analyst and manager</p>
+<pre class="r"><code>de_h1b_chase_process %&gt;% group_by(job_level_aggregate, job_function) %&gt;% 
+  summarise(count=n(), mean_salary=mean(salary)) %&gt;% 
+  
+  mutate(job_function=fct_reorder(job_function,mean_salary,mean))%&gt;% 
+  ungroup() %&gt;% 
+  ggplot(aes(x=job_function,y=mean_salary, label=(mean_salary)))  +
+  geom_col(aes(fill=job_level_aggregate), position = &quot;dodge&quot;) +
+  coord_flip() + 
+  theme_minimal() + 
+scale_y_continuous(labels = scales::dollar, 
+  breaks = c(0,25000,50000,75000,100000,125000,150000,200000)) + xlab(&#39;&#39;)  +
+  guides(fill = guide_legend(reverse = TRUE))+
+  theme(legend.position=&quot;top&quot;,
+        legend.justification=&#39;left&#39;,
+        legend.direction=&#39;horizontal&#39;,
+        panel.grid.major.y = element_blank(),
+        panel.grid.minor.y = element_blank()
+        ) +
+  ylab(label = &quot;&quot;) +
+  labs(fill = &quot;Job Level&quot;)+
+  ggtitle(label=&quot;Mean Salary by Job Level&quot;, 
+          subtitle = &quot;Data Scientist has highest mean salary and also lowest gap between Management and Analyst&quot;)</code></pre>
+<p><img src="/post/2019-11-19-analyze-chase-h1b-data_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
+</div>
+<div id="q4-how-median-salary-increases-over-year" class="section level2">
+<h2>Q4: How Median Salary Increases over Year?</h2>
+<p>Overall, it seems 2019 is the best timing to join Chase. Nevertheless, we only have 50 data points on 2020, so the conclusion might change if we come back later. IT Analyst level enjoys a consistent salary increase over year. Management level salary increase is higher than analyst level which is expected, but management level jobs also take a harder hit when salary decreases. Not sure this sharp salary decrease is due to few data points or forewarning for the recession.</p>
+<pre class="r"><code>analyst_manager_lift&lt;-de_h1b_chase_process %&gt;% 
+  group_by(start_date_year,it_flag,job_level_aggregate) %&gt;% 
+  summarise(n(),mean(salary),median(salary),max(salary),min(salary)) %&gt;% janitor::clean_names() %&gt;% 
+  select(start_date_year,job_level_aggregate,it_flag,median_salary,n) %&gt;% group_by(it_flag,job_level_aggregate) %&gt;% 
+  arrange(it_flag,job_level_aggregate,start_date_year) %&gt;% mutate(salary_increase_rate=median_salary/lag(median_salary)-1)
+
+p4_1&lt;-analyst_manager_lift %&gt;% filter(!is.na(salary_increase_rate)) %&gt;%
+  rename(`Job Level`=job_level_aggregate) %&gt;% 
+  ggplot(aes(x=start_date_year,y=salary_increase_rate)) +
+  geom_point()  + geom_line(aes(colour=`Job Level`))+ 
+  facet_wrap(~it_flag+`Job Level`) +theme_minimal() +
+  scale_y_continuous(labels = scales::percent) +
+  theme(legend.position=&quot;top&quot;,
+        legend.justification=&#39;left&#39;,
+        legend.direction=&#39;horizontal&#39;) +
+  ylab(&#39;Salary Increase Rate&#39;) +
+  xlab(&quot;start date year&quot;) +
+  ggtitle(label = &quot;Salary Increase Rate Compared to Prior Year By Job Level&quot;,
+subtitle = &quot;Management has higher increase rate compared to Analyst Levels.           
+IT Analyst has higher increase rate compared to Non-IT Analyst&quot;)
+  
+p4_2&lt;-de_h1b_chase_process %&gt;% 
+  group_by(start_date_year) %&gt;% 
+  summarise(n(),mean(salary),median(salary),max(salary),min(salary)) %&gt;% janitor::clean_names() %&gt;% 
+  select(start_date_year,median_salary,n) %&gt;%
+  arrange(start_date_year) %&gt;% mutate(salary_increase_rate=median_salary/lag(median_salary)-1) %&gt;%    filter(!is.na(salary_increase_rate)) %&gt;%
+  ggplot(aes(x=start_date_year,y=salary_increase_rate)) +
+  geom_point()  + geom_line()+ 
+  theme_minimal() +
+  scale_y_continuous(labels = scales::percent) +
+  theme(legend.position=&quot;top&quot;,
+        legend.justification=&#39;left&#39;,
+        legend.direction=&#39;horizontal&#39;) +
+  ylab(&#39;Salary Increase Rate&#39;) +
+  xlab(&quot;start date year&quot;) +
+  ggtitle(label = &quot;Salary Increase Rate Compared to Prior Year&quot;)
+
+gridExtra::grid.arrange(p4_1,p4_2,nrow=2,heights=c(3/4,1/4))</code></pre>
+<p><img src="/post/2019-11-19-analyze-chase-h1b-data_files/figure-html/unnamed-chunk-9-1.png" width="672" /></p>
+</div>
+<div id="q5a-how-is-the-salary-distributed-on-the-job-function-related-to-my-background" class="section level2">
+<h2>Q5a: How is the salary distributed on the Job Function related to my background?</h2>
+<p>Since I’m a data analyst, only <code>Data Scientist</code>,<code>Marketing</code>,<code>Modeling</code>,<code>Risk/Fraud</code> would be interested to me. Modeling jobs seem to have many data points and high median/mean salary. Risk/Fraud and Marketing seems to have relatively same salary range, except Risk Senior Analyst has lower median salary than the analyst level. This makes me realized that Risk team have Analyst/Senior Analyst/Associate/Senior Associate 4 levels, my prior coding might just naively put Senior Analyst and Senior Associate into the same group, this would be a self QC during the work, but for personal blog, I think we can skip that :)</p>
+<pre class="r"><code>de_h1b_chase_process %&gt;% filter(
+  job_function %in% c(&#39;Data Scientist&#39;,&#39;Marketing&#39;,&#39;Modeling&#39;,&#39;Risk/Fraud&#39;)) %&gt;%
+  filter(job_level %in% c(&#39;Analyst&#39;,&#39;Senior Analyst&#39;,&#39;Manager&#39;)) %&gt;% 
+  mutate(job_level=fct_reorder(job_level,salary,min)) %&gt;% 
+  ggplot(aes(x=job_level,y=salary, colour=job_function)) + 
+  geom_boxplot() +
+  geom_jitter(width = 0.1, alpha=0.7)+
+  ggthemes::scale_color_excel_new()+
+  facet_wrap(~ job_function) + theme_minimal() +
+  theme(strip.text.x = element_text(size = 10, face = &quot;bold&quot;),
+        legend.position = &quot;none&quot;)+
+  scale_y_continuous(labels = scales::dollar) +
+  xlab(&quot;&quot;)+ylab(&quot;&quot;) +
+  ggtitle(label = &quot;Focus on Jobs related to my interest&quot;,
+          subtitle = &quot;Modeling jobs seem to have many data points and high median/mean salary&quot;)</code></pre>
+<p><img src="/post/2019-11-19-analyze-chase-h1b-data_files/figure-html/unnamed-chunk-10-1.png" width="672" /></p>
+</div>
+<div id="q5a-how-are-the-salary-increases-over-year" class="section level2">
+<h2>Q5a: How are the salary increases over year?</h2>
+<p>An immediate follow up question would be, which job function has consistent growth rate over year.
+Overall trend, the modeling job enjoys its annual salary boost, and Marketing salary is also catching up, but if we look at closely, the increase is probably duo to higher Salary increase in Management level.</p>
+<pre class="r"><code>p5_1&lt;-
+  de_h1b_chase_process %&gt;% filter(
+    job_function %in% c(&#39;Data Scientist&#39;,&#39;Marketing&#39;,&#39;Modeling&#39;,&#39;Risk/Fraud&#39;)) %&gt;%
+  filter(job_level %in% c(&#39;Analyst&#39;,&#39;Senior Analyst&#39;,&#39;Manager&#39;)) %&gt;% 
+  group_by(start_date_year,job_function) %&gt;% summarise(salary=median(salary)) %&gt;% ungroup() %&gt;%  
+  ggplot(aes(x = start_date_year, y=salary, color=job_function))+
+  geom_point() + geom_line() +
+  scale_y_continuous(labels = scales::dollar) +
+  xlab(&quot;&quot;)+ylab(&quot;&quot;) + theme_minimal()+  
+  theme(legend.position=&quot;top&quot;,legend.justification=&#39;left&#39;,
+        legend.direction=&#39;horizontal&#39;,  panel.grid.minor.x = element_blank()) +
+  ggthemes::scale_color_excel_new() +
+  ggtitle(label = &quot;Focus on Jobs related to my interest, Part2&quot;,
+          subtitle = &quot;Modeling position has good growth potential over time&quot;)
+
+
+p5_2&lt;-de_h1b_chase_process %&gt;% filter(
+  job_function %in% c(&#39;Data Scientist&#39;,&#39;Marketing&#39;,&#39;Modeling&#39;,&#39;Risk/Fraud&#39;)) %&gt;%
+  filter(job_level %in% c(&#39;Analyst&#39;,&#39;Senior Analyst&#39;,&#39;Manager&#39;)) %&gt;% 
+  mutate(job_level=fct_reorder(job_level,salary,min)) %&gt;%
+  group_by(job_level,start_date_year,job_function) %&gt;% summarise(salary=median(salary)) %&gt;% ungroup() %&gt;%  
+  ggplot(aes(x = start_date_year, y=salary, color=job_function))+
+  geom_point() + geom_line() +
+  facet_wrap(~job_level) +
+  scale_y_continuous(labels = scales::dollar) +
+  xlab(&quot;&quot;)+ylab(&quot;&quot;) + theme_minimal()+  
+  theme(  panel.grid.minor.x = element_blank(),
+  legend.position = &quot;none&quot;) +
+  ggthemes::scale_color_excel_new()
+
+gridExtra::grid.arrange(p5_1,p5_2,nrow=2)</code></pre>
+<p><img src="/post/2019-11-19-analyze-chase-h1b-data_files/figure-html/unnamed-chunk-11-1.png" width="672" /></p>
+</div>
+</div>
+<div id="takeaway" class="section level1">
+<h1>Takeaway</h1>
+<p>This blog post aims to understand how H1B salary in chase, Wilmington distributed. Couple worth noting things：</p>
+<ul>
+<li>Chase is the largest H1B file company</li>
+<li>Good timing for applying Non-Entry level jobs would be March-Aug</li>
+<li>Modeling/Data Scientist has the highest paid entry level job positions.</li>
+<li>Marketing Job has nice salary increase trend</li>
+<li>All Job salary decreases in 2020, which it’s hard to tell from now this is due to few data points or forewarning for the recession</li>
+</ul>
+</div>
+
+		</div>
+		<footer class="post__footer">
+			
+<div class="post__tags tags clearfix">
+	<svg class="tags__badge icon icon-tag" width="16" height="16" viewBox="0 0 32 32"><path d="M32 19c0 1-1 2-1 2L21 31s-1 1-2 1-2-1-2-1L2 16c-1-1-1.4-2-1.4-2S0 12.5 0 11V3C0 1.5.8.8.8.8S1.5 0 3 0h8c1.5 0 3 .6 3 .6S15 1 16 2l15 15s1 1 1 2zM7 10a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/></svg>
+	<ul class="tags__list">
+		<li class="tags__item"><a class="tags__link btn" href="/tags/r/" rel="tag">R</a></li>
+	</ul>
+</div>
+		</footer>
+	</article>
+</main>
+
+<div class="authorbox clearfix">
+	<figure class="authorbox__avatar">
+		<img alt="Xiaoke Liu avatar" src="/img/Jiuzhai_Front_photo.jpg" class="avatar" height="90" width="90">
+	</figure>
+	<div class="authorbox__header">
+		<span class="authorbox__name">About Xiaoke Liu</span>
+	</div>
+	<div class="authorbox__description">
+		:)
+	</div>
+</div>
+
+<nav class="post-nav flex">
+	<div class="post-nav__item post-nav__item--prev">
+		<a class="post-nav__link" href="/post/moving-files-around-in-r/" rel="prev"><span class="post-nav__caption">«&thinsp;Previous</span><p class="post-nav__post-title">Moving Files Around In R</p></a>
+	</div>
+</nav>
+
+<section class="comments">
+	<div id="disqus_thread"></div>
+<script type="application/javascript">
+    var disqus_config = function () {
+    
+    
+    
+    };
+    (function() {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+            return;
+        }
+        var d = document, s = d.createElement('script'); s.async = true;
+        s.src = '//' + "https-xiaokeliu-netlify-com" + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+</section>
+
+
+			</div>
+			<aside class="sidebar"><div class="widget-search widget">
+	<form class="widget-search__form" role="search" method="get" action="https://google.com/search">
+		<label>
+			<input class="widget-search__field" type="search" placeholder="SEARCH..." value="" name="q" aria-label="SEARCH...">
+		</label>
+		<input class="widget-search__submit" type="submit" value="Search">
+		<input type="hidden" name="sitesearch" value="/" />
+	</form>
+</div>
+<div class="widget-recent widget">
+	<h4 class="widget__title">Recent Posts</h4>
+	<div class="widget__content">
+		<ul class="widget__list">
+			<li class="widget__item"><a class="widget__link" href="/post/analyze-chase-h1b-data/">Analyze Chase H1B Data</a></li>
+			<li class="widget__item"><a class="widget__link" href="/post/moving-files-around-in-r/">Moving Files Around In R</a></li>
+			<li class="widget__item"><a class="widget__link" href="/post/learning-data-table/">Learning data.table</a></li>
+			<li class="widget__item"><a class="widget__link" href="/post/basic-elements/">Basic HTML Elements</a></li>
+		</ul>
+	</div>
+</div>
+<div class="widget-categories widget">
+	<h4 class="widget__title">Categories</h4>
+	<div class="widget__content">
+		<ul class="widget__list">
+			<li class="widget__item"><a class="widget__link" href="/categories/automation">Automation</a></li>
+			<li class="widget__item"><a class="widget__link" href="/categories/data.table">Data.table</a></li>
+			<li class="widget__item"><a class="widget__link" href="/categories/development">Development</a></li>
+			<li class="widget__item"><a class="widget__link" href="/categories/eda">Eda</a></li>
+			<li class="widget__item"><a class="widget__link" href="/categories/r">R</a></li>
+		</ul>
+	</div>
+</div>
+<div class="widget-taglist widget">
+	<h4 class="widget__title">Tags</h4>
+	<div class="widget__content">
+		<a class="widget-taglist__link widget__link btn" href="/tags/automation" title="Automation">Automation</a>
+		<a class="widget-taglist__link widget__link btn" href="/tags/basic-elements" title="Basic elements">Basic elements</a>
+		<a class="widget-taglist__link widget__link btn" href="/tags/css" title="Css">Css</a>
+		<a class="widget-taglist__link widget__link btn" href="/tags/data.table" title="Data.table">Data.table</a>
+		<a class="widget-taglist__link widget__link btn" href="/tags/html" title="Html">Html</a>
+		<a class="widget-taglist__link widget__link btn" href="/tags/r" title="R">R</a>
+		<a class="widget-taglist__link widget__link btn" href="/tags/unix" title="Unix">Unix</a>
+	</div>
+</div>
+</aside>
+		</div>
+		<footer class="footer">
+	<div class="container footer__container flex">
+		
+		<div class="footer__copyright">
+			&copy; 2019 DDZR Blog.
+			<span class="footer__copyright-credits">Generated with <a href="https://gohugo.io/" rel="nofollow noopener" target="_blank">Hugo</a> and <a href="https://github.com/Vimux/Mainroad/" rel="nofollow noopener" target="_blank">Mainroad</a> theme.</span>
+		</div>
+	</div>
+</footer>
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/r.min.js"></script>
+
+<script>
+hljs.configure({languages: []});
+hljs.initHighlightingOnLoad();
+</script>
+	</div>
+<script async defer src="/js/menu.js"></script>
+</body>
+</html>
