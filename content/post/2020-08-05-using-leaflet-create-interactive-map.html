@@ -24,6 +24,7 @@ thumbnail: ''
 <h1>Loading Data</h1>
 <pre class="r"><code>library(tidyverse)
 library(leaflet)
+library(geosphere)
 library(kableExtra)
 options(kableExtra.html.bsTable = TRUE)
 pizza_barstool &lt;- readr::read_csv(&quot;https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-10-01/pizza_barstool.csv&quot;)</code></pre>
@@ -259,4 +260,93 @@ basic_leaflet&lt;-pizza_barstool %&gt;% filter(city==&#39;New York&#39;) %&gt;%
   setView(lng =-73.98052 , lat=40.7569 , zoom = 12)</code></pre>
 <p>Somehow I’m having trouble to include actual leaflet widget in blogdown, so a walkaround is just paste a picture below as a demo</p>
 <p><img src="/post/2020-08-05-using-leaflet-create-interactive-map_files/basic_leaflet_png_2mb.png" /></p>
+<div id="only-plot-pizza-stores-that-nears-certain-location" class="section level2">
+<h2>Only Plot pizza stores that nears certain location</h2>
+<p>Let’s say we’re interested in finding pizza stores that are within 1000 meters from <code>Empire State</code> and <code>Wall Street</code></p>
+<pre class="r"><code>two_location&lt;-data.frame(
+  lat=c(40.748817,40.706005),
+  lng=c(-73.985428,-74.008827),
+  name=c(&#39;Empire State Building&#39;,&#39;Wall Street&#39;))
+
+two_location  %&gt;% kable(&quot;html&quot;) %&gt;%
+  kable_styling(bootstrap_options = &quot;striped&quot;, full_width = F,position = &quot;center&quot;)</code></pre>
+<table class="table table-striped" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:right;">
+lat
+</th>
+<th style="text-align:right;">
+lng
+</th>
+<th style="text-align:left;">
+name
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right;">
+40.74882
+</td>
+<td style="text-align:right;">
+-73.98543
+</td>
+<td style="text-align:left;">
+Empire State Building
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+40.70600
+</td>
+<td style="text-align:right;">
+-74.00883
+</td>
+<td style="text-align:left;">
+Wall Street
+</td>
+</tr>
+</tbody>
+</table>
+<p>We can use <code>crossing</code> function to calculate all possible combination between pizza store and our two target locations, then use <code>filter</code> function to only include those qualified pizza stores. Last we can do is use <code>awesomeIcons</code> to add a cute Icons to our two target locations.</p>
+<pre class="r"><code>icons &lt;- awesomeIcons(
+  icon = &#39;empire&#39;,
+  iconColor = &#39;white&#39;,
+  markerColor = &quot;white&quot;,
+  library = &#39;fa&#39; 
+)
+
+#unit is meter
+
+within_1km&lt;-two_location %&gt;% crossing(pizza_barstool %&gt;% mutate(row_id=row_number()) %&gt;% select(latitude,longitude,row_id)) %&gt;% 
+  rowwise() %&gt;% 
+  mutate(distance=geosphere::distm(c(lng, lat ), c(longitude,latitude ), 
+                                   fun = geosphere::distHaversine)) %&gt;% 
+  ungroup() %&gt;% 
+  filter(distance&lt;=1000)
+
+
+basic_leaflet2&lt;-basic_leaflet %&gt;% addCircles(data=two_location,radius=1000,fillOpacity = 0,weight = 2) %&gt;% 
+  addAwesomeMarkers(
+    icon=icons,popup =c(&#39;Empire State Building&#39;,&#39;Wall Street&#39;) ,data=two_location ) %&gt;% 
+  addCircles(data=within_1km %&gt;% filter(name==&#39;Wall Street&#39;), group = &quot;Wall Street&quot;, color=&#39;red&#39;, 
+            lat = ~latitude, lng=~longitude
+             ) %&gt;% 
+  addCircles(data=within_1km %&gt;% filter(name!=&#39;Wall Street&#39;), group = &quot;Empire State&quot;, color=&#39;blue&#39;, 
+             lat = ~latitude, lng=~longitude
+  )</code></pre>
+<pre><code>## Assuming &quot;lng&quot; and &quot;lat&quot; are longitude and latitude, respectively
+## Assuming &quot;lng&quot; and &quot;lat&quot; are longitude and latitude, respectively</code></pre>
+<p><img src="/post/2020-08-05-using-leaflet-create-interactive-map_files/basic_leaflet_2.png" /></p>
+</div>
+</div>
+<div id="some-helpful-links" class="section level1">
+<h1>Some helpful links</h1>
+<p>I found below links to be helpful when exploring <code>leaflet</code> package</p>
+<ol style="list-style-type: decimal">
+<li><a href="https://www.kevinzolea.com/post/leaflet/quick-tips-for-customizing-your-r-leaflet-map/">customizing leaflet map</a></li>
+<li><a href="https://www.datacamp.com/courses/interactive-maps-with-leaflet-in-r">datacamp course</a></li>
+</ol>
+<p>Hope this short blog would be helpful to someone who need a quick introduction on <code>leaflet</code> package and also future me :)</p>
 </div>

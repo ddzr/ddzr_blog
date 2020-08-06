@@ -22,6 +22,7 @@ Let's use tidytuesday pizza rating dataset to demonstrate the power of `leaflet`
 ```{r , warning=F, message=F }
 library(tidyverse)
 library(leaflet)
+library(geosphere)
 library(kableExtra)
 options(kableExtra.html.bsTable = TRUE)
 pizza_barstool <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-10-01/pizza_barstool.csv")
@@ -90,3 +91,63 @@ basic_leaflet<-pizza_barstool %>% filter(city=='New York') %>%
 Somehow I'm having trouble to include actual leaflet widget in blogdown, so a walkaround is just paste a picture below as a demo
 
 ![](/post/2020-08-05-using-leaflet-create-interactive-map_files/basic_leaflet_png_2mb.png)
+
+## Only Plot pizza stores that nears certain location
+
+Let's say we're interested in finding pizza stores that are within 1000 meters from `Empire State` and `Wall Street`
+
+```{r}
+two_location<-data.frame(
+  lat=c(40.748817,40.706005),
+  lng=c(-73.985428,-74.008827),
+  name=c('Empire State Building','Wall Street'))
+
+two_location  %>% kable("html") %>%
+  kable_styling(bootstrap_options = "striped", full_width = F,position = "center")
+```
+
+We can use `crossing` function to calculate all possible combination between pizza store and our two target locations, then use `filter` function to only include those qualified pizza stores. Last we can do is use `awesomeIcons` to add a cute Icons to our two target locations. 
+
+
+```{r}
+
+icons <- awesomeIcons(
+  icon = 'empire',
+  iconColor = 'white',
+  markerColor = "white",
+  library = 'fa' 
+)
+
+#unit is meter
+
+within_1km<-two_location %>% crossing(pizza_barstool %>% mutate(row_id=row_number()) %>% select(latitude,longitude,row_id)) %>% 
+  rowwise() %>% 
+  mutate(distance=geosphere::distm(c(lng, lat ), c(longitude,latitude ), 
+                                   fun = geosphere::distHaversine)) %>% 
+  ungroup() %>% 
+  filter(distance<=1000)
+
+
+basic_leaflet2<-basic_leaflet %>% addCircles(data=two_location,radius=1000,fillOpacity = 0,weight = 2) %>% 
+  addAwesomeMarkers(
+    icon=icons,popup =c('Empire State Building','Wall Street') ,data=two_location ) %>% 
+  addCircles(data=within_1km %>% filter(name=='Wall Street'), group = "Wall Street", color='red', 
+            lat = ~latitude, lng=~longitude
+             ) %>% 
+  addCircles(data=within_1km %>% filter(name!='Wall Street'), group = "Empire State", color='blue', 
+             lat = ~latitude, lng=~longitude
+  )
+```
+
+![](/post/2020-08-05-using-leaflet-create-interactive-map_files/basic_leaflet_2.png)
+
+
+# Some helpful links
+
+I found below links to be helpful when exploring `leaflet` package
+
+1. [customizing leaflet map](https://www.kevinzolea.com/post/leaflet/quick-tips-for-customizing-your-r-leaflet-map/) 
+2. [datacamp course](https://www.datacamp.com/courses/interactive-maps-with-leaflet-in-r)
+
+Hope this short blog would be helpful to someone who need a quick introduction on `leaflet` package and also future me :) 
+
