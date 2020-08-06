@@ -1,0 +1,262 @@
+---
+title: Using Leaflet Create Interactive Map
+author: Xiaoke
+date: '2020-08-05'
+slug: using-leaflet-create-interactive-map
+categories:
+  - R
+tags:
+  - leaflet
+description: ''
+thumbnail: ''
+---
+
+<script src="/rmarkdown-libs/kePrint/kePrint.js"></script>
+<link href="/rmarkdown-libs/bsTable/bootstrapTable.min.css" rel="stylesheet" />
+
+
+<div id="introduction" class="section level1">
+<h1>Introduction</h1>
+<p>Recently, I have been using <code>leaflet</code> r package to create some interactive maps in R to help to build data stories. It’s pretty amazing that just few lines of code in r that could lead to a good looking interactive map!</p>
+<p>Let’s use tidytuesday pizza rating dataset to demonstrate the power of <code>leaflet</code> package.</p>
+</div>
+<div id="loading-data" class="section level1">
+<h1>Loading Data</h1>
+<pre class="r"><code>library(tidyverse)
+library(leaflet)
+library(kableExtra)
+options(kableExtra.html.bsTable = TRUE)
+pizza_barstool &lt;- readr::read_csv(&quot;https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-10-01/pizza_barstool.csv&quot;)</code></pre>
+<p>Take a look at the data. <code>latitude</code> and <code>longtitude</code> would be the key two columns we would need for making the map.</p>
+<pre class="r"><code>pizza_barstool %&gt;% filter(city==&#39;New York&#39;) %&gt;% head(5) %&gt;% select(1:9) %&gt;% kable(&quot;html&quot;) %&gt;%
+  kable_styling(bootstrap_options = &quot;striped&quot;, full_width = F,position = &quot;center&quot;)</code></pre>
+<table class="table table-striped" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+name
+</th>
+<th style="text-align:left;">
+address1
+</th>
+<th style="text-align:left;">
+city
+</th>
+<th style="text-align:right;">
+zip
+</th>
+<th style="text-align:left;">
+country
+</th>
+<th style="text-align:right;">
+latitude
+</th>
+<th style="text-align:right;">
+longitude
+</th>
+<th style="text-align:right;">
+price_level
+</th>
+<th style="text-align:right;">
+provider_rating
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+99 Cent Fresh Pizza
+</td>
+<td style="text-align:left;">
+473 Lexington Ave
+</td>
+<td style="text-align:left;">
+New York
+</td>
+<td style="text-align:right;">
+10017
+</td>
+<td style="text-align:left;">
+US
+</td>
+<td style="text-align:right;">
+40.75370
+</td>
+<td style="text-align:right;">
+-73.97411
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+4.0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Nino’s 46
+</td>
+<td style="text-align:left;">
+39 W 46th St
+</td>
+<td style="text-align:left;">
+New York
+</td>
+<td style="text-align:right;">
+10036
+</td>
+<td style="text-align:left;">
+US
+</td>
+<td style="text-align:right;">
+40.75690
+</td>
+<td style="text-align:right;">
+-73.98052
+</td>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:right;">
+4.0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+La Pizza Fresca Ristorante
+</td>
+<td style="text-align:left;">
+31 E 20th St
+</td>
+<td style="text-align:left;">
+New York
+</td>
+<td style="text-align:right;">
+10003
+</td>
+<td style="text-align:left;">
+US
+</td>
+<td style="text-align:right;">
+40.73905
+</td>
+<td style="text-align:right;">
+-73.98889
+</td>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:right;">
+3.0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+La Gusto Pizza
+</td>
+<td style="text-align:left;">
+382 8th Ave
+</td>
+<td style="text-align:left;">
+New York
+</td>
+<td style="text-align:right;">
+10001
+</td>
+<td style="text-align:left;">
+US
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+3.5
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Cheesy Pizza
+</td>
+<td style="text-align:left;">
+2640 Broadway
+</td>
+<td style="text-align:left;">
+New York
+</td>
+<td style="text-align:right;">
+10025
+</td>
+<td style="text-align:left;">
+US
+</td>
+<td style="text-align:right;">
+40.79719
+</td>
+<td style="text-align:right;">
+-73.96957
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+3.0
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="build-a-basic-interactive-map" class="section level1">
+<h1>Build a basic interactive map</h1>
+<p>Now let’s build basic interactive map using leaflet</p>
+<p>Couple functions or tricks are worth metion here:</p>
+<ol style="list-style-type: decimal">
+<li>use <code>colorFactor</code> fucntion here to give different locations different colors, this would become useful when creating clusters</li>
+<li>use <code>addProviderTiles</code> function to change base map, I like <code>CartoDB</code> as it provide a greyish map which would be a great background color to plot colorful dots</li>
+<li>use <code>label</code> option within <code>addCircles</code> function to give more information</li>
+<li>use <code>addLayersControl</code> function to add a nice select button in the map to give option show/hide certain points</li>
+<li>use <code>addLegend</code> function to show color defination</li>
+<li>use <code>setView</code> function to set view of the map</li>
+</ol>
+<pre class="r"><code>cbf_1 &lt;- rev(c(&quot;#999999&quot;, &quot;#E69F00&quot;, &quot;#56B4E9&quot;, &quot;#009E73&quot;))
+
+rating_color&lt;-colorFactor(palette = (cbf_1), 
+                      level=factor(c(&#39;&lt;4&#39;,&#39;4-6&#39;,&#39;6-8&#39;,&#39;8+&#39; ),
+                      levels = c(&#39;&lt;4&#39;,&#39;4-6&#39;,&#39;6-8&#39;,&#39;8+&#39; )),ordered = T )
+
+rating_groups&lt;-pizza_barstool %&gt;% filter(city==&#39;New York&#39;) %&gt;%
+  mutate(rating_category=case_when(review_stats_all_average_score&lt;=4 ~ &#39;&lt;4&#39;,
+                                   review_stats_all_average_score&gt;4 &amp; review_stats_all_average_score&lt;=6 ~ &#39;4-6&#39;,
+                                   review_stats_all_average_score&gt;6 &amp; review_stats_all_average_score&lt;=8 ~ &#39;6-8&#39;,
+                                   review_stats_all_average_score&gt;8 ~ &#39;8+&#39;)) %&gt;% 
+  group_split(rating_category)
+
+
+basic_leaflet&lt;-pizza_barstool %&gt;% filter(city==&#39;New York&#39;) %&gt;%
+  leaflet() %&gt;% 
+  addProviderTiles(provider = &#39;CartoDB&#39;) %&gt;% 
+  addCircles(data=rating_groups[[1]], lng = ~longitude, lat=~latitude,radius = 4,  
+             label = ~paste0(&quot;name: &quot;,name,&quot; &lt;br/&gt; &quot;,&quot;rating: &quot;,round(review_stats_all_average_score,2)),
+             fillOpacity = 0,color = cbf_1[1], group = &quot;&lt;4&quot;) %&gt;% 
+  addCircles(data=rating_groups[[2]], lng = ~longitude, lat=~latitude,radius = 4,  
+             label = ~paste0(&quot;name: &quot;,name,&quot; &lt;br/&gt; &quot;,&quot;rating: &quot;,round(review_stats_all_average_score,2)),
+             fillOpacity = 0,color = cbf_1[2], group = &quot;4-6&quot;) %&gt;% 
+  addCircles(data=rating_groups[[3]], lng = ~longitude, lat=~latitude,radius = 4,  
+             label = ~paste0(&quot;name: &quot;,name,&quot; &lt;br/&gt; &quot;,&quot;rating: &quot;,round(review_stats_all_average_score,2)),
+             fillOpacity = 0,color = cbf_1[3], group = &quot;6-8&quot;) %&gt;% 
+  addCircles(data=rating_groups[[4]], lng = ~longitude, lat=~latitude,radius = 4,  
+             label = ~paste0(&quot;name: &quot;,name,&quot; &lt;br/&gt; &quot;,&quot;rating: &quot;,round(review_stats_all_average_score,2)),
+             fillOpacity = 0,color = cbf_1[4], group = &quot;8+&quot;) %&gt;%   
+  addLayersControl(overlayGroups = c(&#39;&lt;4&#39;,&#39;4-6&#39;,&#39;6-8&#39;,&#39;8+&#39; ), 
+                   options=layersControlOptions(collapsed=FALSE),           
+                   position = &quot;topleft&quot;) %&gt;% 
+  addLegend(position = &quot;bottomright&quot;,pal = rating_color,values = ~c(&#39;&lt;4&#39;,&#39;4-6&#39;,&#39;6-8&#39;,&#39;8+&#39; ), title = &quot;Rating&quot;) %&gt;% 
+  setView(lng =-73.98052 , lat=40.7569 , zoom = 12)</code></pre>
+<p>Somehow I’m having trouble to include actual leaflet widget in blogdown, so a walkaround is just paste a picture below as a demo</p>
+<p><img src="/post/2020-08-05-using-leaflet-create-interactive-map_files/basic_leaflet_png_2mb.png" /></p>
+</div>

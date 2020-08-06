@@ -1,0 +1,92 @@
+---
+title: Using Leaflet Create Interactive Map
+author: Xiaoke
+date: '2020-08-05'
+slug: using-leaflet-create-interactive-map
+categories:
+  - R
+tags:
+  - leaflet
+description: ''
+thumbnail: ''
+---
+
+
+# Introduction
+
+Recently, I have been using `leaflet` r package to create some interactive maps in R to help to build data stories. It's pretty amazing that just few lines of code in r that could lead to a good looking interactive map!
+
+Let's use tidytuesday pizza rating dataset to demonstrate the power of `leaflet` package. 
+
+# Loading Data
+```{r , warning=F, message=F }
+library(tidyverse)
+library(leaflet)
+library(kableExtra)
+options(kableExtra.html.bsTable = TRUE)
+pizza_barstool <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-10-01/pizza_barstool.csv")
+
+
+```
+
+Take a look at the data. `latitude` and `longtitude` would be the key two columns we would need for making the map. 
+```{r}
+pizza_barstool %>% filter(city=='New York') %>% head(5) %>% select(1:9) %>% kable("html") %>%
+  kable_styling(bootstrap_options = "striped", full_width = F,position = "center")
+```
+
+# Build a basic interactive map
+
+Now let's build basic interactive map using leaflet
+
+Couple functions or tricks are worth metion here:
+
+1. use `colorFactor` fucntion here to give different locations different colors, this would become useful when creating clusters
+2. use `addProviderTiles` function to change base map, I like `CartoDB` as it provide a greyish map which would be a great background color to plot colorful dots
+3. use `label` option within `addCircles` function to give more information 
+4. use `addLayersControl` function to add a nice select button in the map to give option show/hide certain points
+5. use `addLegend` function to show color defination
+6. use `setView` function to set view of the map
+
+```{r, warning=F, message=F }
+
+cbf_1 <- rev(c("#999999", "#E69F00", "#56B4E9", "#009E73"))
+
+rating_color<-colorFactor(palette = (cbf_1), 
+                      level=factor(c('<4','4-6','6-8','8+' ),
+                      levels = c('<4','4-6','6-8','8+' )),ordered = T )
+
+rating_groups<-pizza_barstool %>% filter(city=='New York') %>%
+  mutate(rating_category=case_when(review_stats_all_average_score<=4 ~ '<4',
+                                   review_stats_all_average_score>4 & review_stats_all_average_score<=6 ~ '4-6',
+                                   review_stats_all_average_score>6 & review_stats_all_average_score<=8 ~ '6-8',
+                                   review_stats_all_average_score>8 ~ '8+')) %>% 
+  group_split(rating_category)
+
+
+basic_leaflet<-pizza_barstool %>% filter(city=='New York') %>%
+  leaflet() %>% 
+  addProviderTiles(provider = 'CartoDB') %>% 
+  addCircles(data=rating_groups[[1]], lng = ~longitude, lat=~latitude,radius = 4,  
+             label = ~paste0("name: ",name," <br/> ","rating: ",round(review_stats_all_average_score,2)),
+             fillOpacity = 0,color = cbf_1[1], group = "<4") %>% 
+  addCircles(data=rating_groups[[2]], lng = ~longitude, lat=~latitude,radius = 4,  
+             label = ~paste0("name: ",name," <br/> ","rating: ",round(review_stats_all_average_score,2)),
+             fillOpacity = 0,color = cbf_1[2], group = "4-6") %>% 
+  addCircles(data=rating_groups[[3]], lng = ~longitude, lat=~latitude,radius = 4,  
+             label = ~paste0("name: ",name," <br/> ","rating: ",round(review_stats_all_average_score,2)),
+             fillOpacity = 0,color = cbf_1[3], group = "6-8") %>% 
+  addCircles(data=rating_groups[[4]], lng = ~longitude, lat=~latitude,radius = 4,  
+             label = ~paste0("name: ",name," <br/> ","rating: ",round(review_stats_all_average_score,2)),
+             fillOpacity = 0,color = cbf_1[4], group = "8+") %>%   
+  addLayersControl(overlayGroups = c('<4','4-6','6-8','8+' ), 
+                   options=layersControlOptions(collapsed=FALSE),           
+                   position = "topleft") %>% 
+  addLegend(position = "bottomright",pal = rating_color,values = ~c('<4','4-6','6-8','8+' ), title = "Rating") %>% 
+  setView(lng =-73.98052 , lat=40.7569 , zoom = 12)
+
+```
+
+Somehow I'm having trouble to include actual leaflet widget in blogdown, so a walkaround is just paste a picture below as a demo
+
+![](/post/2020-08-05-using-leaflet-create-interactive-map_files/basic_leaflet_png_2mb.png)
